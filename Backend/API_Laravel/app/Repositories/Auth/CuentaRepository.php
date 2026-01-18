@@ -7,7 +7,7 @@ use App\Models\Usuario;
 use App\Models\Cuenta;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
-use illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Log;
 
 class CuentaRepository implements ICuentaRepository
 {
@@ -67,7 +67,7 @@ class CuentaRepository implements ICuentaRepository
     {
         $cuentaModelo->update([
             'clave' => $nuevaClave,
-            'fecha_mail' => Carbon::now(),
+            'fecha_clave' => Carbon::now(),
         ]);
 
         return $cuentaModelo->fresh();

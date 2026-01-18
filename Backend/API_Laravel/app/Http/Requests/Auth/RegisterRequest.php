@@ -41,7 +41,7 @@ class RegisterRequest extends FormRequest
             ],
 
             'imagen' => [
-                'required',
+                'nullable',
                 'string',
                 'max:80'
             ],

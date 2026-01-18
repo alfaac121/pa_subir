@@ -9,7 +9,7 @@ use App\DTOs\Auth\Registro\RegisterDTO;
 use App\Models\Cuenta;
 use App\Models\Usuario;
 use Carbon\Carbon;
-use Dotenv\Exception\ValidationException;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -197,15 +197,26 @@ class RegistroService implements IRegistroService
             $data = decrypt($datosEncriptados);
             $dto = RegisterDTO::fromArray($data);
             $cuenta = $this->cuentaRepository->findById($cuenta_id);
-    
-            if ($this->userRepository->exists($cuenta_id)) {
-                throw new ValidationException("El correo ya fue registrado");
-            }
-    
             $registro = $this->verificarClave($dto->email, $clave);
     
             if (!$registro['success']) {
-                throw new ValidationException($registro['message']);
+                throw ValidationException::withMessages(['clave' => [$registro['message']]]);
+            }
+
+            // Si el usuario ya existe, simplemente loguearlo y devolver sus datos
+            if ($this->userRepository->exists($cuenta_id)) {
+                $usuarioExistente = $this->userRepository->findByIdCuenta($cuenta_id);
+                $token = $this->jwt->fromUser($cuenta);
+                
+                return [
+                    'success' => true,
+                    'data' => [
+                        'user' => $usuarioExistente,
+                        'token' => $token,
+                        'token_type' => 'bearer',
+                        'expires_in' => $this->jwt->factory()->getTTL() * 60
+                    ]
+                ];
             }
 
             // Iniciar transacción
@@ -214,11 +225,11 @@ class RegistroService implements IRegistroService
             $usuario = $this->userRepository->create([
                 'cuenta_id' => $cuenta->id,
                 'nickname' => $dto->nickname,
-                'imagen' => $dto->imagen,
-                'descripcion' => $dto->descripcion,
-                'link' => $dto->link,
-                'rol_id' => $dto->rol_id,
-                'estado_id' => $dto->estado_id
+                'imagen' => $dto->imagen ?? '',
+                'descripcion' => $dto->descripcion ?? '',
+                'link' => $dto->link ?? '',
+                'rol_id' => $dto->rol_id ?? 3,
+                'estado_id' => $dto->estado_id ?? 1
             ]);
 
             if (!$usuario) {
@@ -255,7 +266,7 @@ class RegistroService implements IRegistroService
             DB::commit();
 
             return [
-                'status' => 'success',
+                'success' => true,
                 'data' => [
                     'user' => $usuario,
                     'token' => $token,
@@ -265,6 +276,10 @@ class RegistroService implements IRegistroService
             ];
 
         } catch (\Exception $e) {
+            Log::error('Error en RegistroService@terminarRegistro: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
             throw $e;
         }
     }

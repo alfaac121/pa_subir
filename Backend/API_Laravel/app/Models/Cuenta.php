@@ -49,9 +49,9 @@ class Cuenta extends Authenticatable implements JWTSubject
     {
         $usuario = $this->usuario;
         return [
-            'usuario_id' => $usuario->id,
-            'estado' => $usuario->estado?->nombre,
-            'rol' => $usuario->rol?->nombre
+            'usuario_id' => $usuario ? $usuario->id : null,
+            'estado' => $usuario ? $usuario->estado?->nombre : 'pendiente',
+            'rol' => $usuario ? $usuario->rol?->nombre : 'usuario'
         ];
     }
 
@@ -63,7 +63,7 @@ class Cuenta extends Authenticatable implements JWTSubject
     public function hasExpired(): bool
     {
         $duracion = 10; // minutos que dura el código
-        return now()->greaterThan(Carbon::parse($this->fecha_mail)->addMinutes($duracion));
+        return now()->greaterThan(Carbon::parse($this->fecha_clave)->addMinutes($duracion));
 }
     /**
      * Genera una clave aleatoria de 6 caracteres (números y letras)
@@ -108,7 +108,7 @@ class Cuenta extends Authenticatable implements JWTSubject
         $this->clave = strtoupper(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 6));
 
         // Extender expiración a 10 minutos más
-        $this->fecha_mail = Carbon::now()->addMinutes(10);
+        $this->fecha_clave = Carbon::now();
 
         $this->save();
         return $this->clave;       

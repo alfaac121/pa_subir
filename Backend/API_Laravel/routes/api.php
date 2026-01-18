@@ -59,6 +59,9 @@ Route::prefix('auth')->group(function()  {
          */
         Route::patch('/reestablecer-contrasena', [AuthController::class, 'reestablecerPassword']);
     });
+    
+    // Perfil público de cualquier usuario
+    Route::get('/perfil-publico/{id}', [UsuarioController::class, 'verPerfilPublico']);
 
 });
 

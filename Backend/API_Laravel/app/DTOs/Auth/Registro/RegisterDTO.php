@@ -11,12 +11,12 @@ final readonly class RegisterDTO
         public string $email,
         public string $password,
         public string $nickname,
-        public string $imagen,
-        public int $estado_id,
-        public int $rol_id,
+        public ?string $imagen = null,
+        public int $estado_id = 1,
+        public int $rol_id = 3,
         public ?string $descripcion = null,
         public ?string $link = null,
-        public string $device_name
+        public string $device_name = 'web'
     ){}
 
     // Crear una instacia del DTO a partir de un array de datos (procedente del request)
@@ -25,12 +25,12 @@ final readonly class RegisterDTO
             email: $data['email'],
             password: $data['password'],
             nickname: $data['nickname'],
-            imagen: $data['imagen'],
-            rol_id: $data['rol_id'],
-            estado_id: $data['estado_id'],
+            imagen: $data['imagen'] ?? null,
+            rol_id: $data['rol_id'] ?? 3,
+            estado_id: $data['estado_id'] ?? 1,
             descripcion: $data['descripcion'] ?? null,
             link: $data['link'] ?? null,
-            device_name:$data['device_name'] ?? 'web'
+            device_name: $data['device_name'] ?? 'web'
         );
     }
 
@@ -40,7 +40,7 @@ final readonly class RegisterDTO
             'email' => $this->email,
             'password' => $this->password,
             'nickname' => $this->nickname,
-            'imagen' => $this->imagen,
+            'imagen' => $this->imagen ?? '',
             'rol_id' => $this->rol_id,
             'estado_id' => $this->estado_id,
             'descripcion' => $this->descripcion,
@@ -54,9 +54,9 @@ final readonly class RegisterDTO
             email: $data['email'],
             password: $data['password'],
             nickname: $data['nickname'],
-            imagen: $data['imagen'],
-            rol_id: $data['rol_id'],
-            estado_id: $data['estado_id'],
+            imagen: $data['imagen'] ?? null,
+            rol_id: $data['rol_id'] ?? 3,
+            estado_id: $data['estado_id'] ?? 1,
             descripcion: $data['descripcion'] ?? null,
             link: $data['link'] ?? null,
             device_name: $data['device_name'] ?? 'web'

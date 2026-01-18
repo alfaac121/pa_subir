@@ -17,6 +17,7 @@ use App\Http\Requests\Auth\RecuperarPasswordCorreoRequest;
 use App\Http\Requests\Auth\RecuperarPasswordRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Tymon\JWTAuth\JWTGuard;
 
@@ -119,6 +120,10 @@ class AuthController
             throw $e;
 
         } catch (\Exception $e) {
+            Log::error('Error en AuthController@register: ' . $e->getMessage(), [
+                'exception' => $e,
+                'request' => $request->all()
+            ]);
             return response()->json([
                 'message' => 'Error al registrar al usuario',
                 'error' => config('app.debug') ? $e->getMessage() : 'Error interno, intentalo más tarde',

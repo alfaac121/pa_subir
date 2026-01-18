@@ -37,4 +37,19 @@ class UsuarioService implements IUsuarioService
     
         return $this->usuarioRepository->update($id, $dto->toArray());
     }
+
+    public function verPerfilPublico(int $id)
+    {
+        $usuario = $this->usuarioRepository->findById($id);
+
+        if (!$usuario) {
+            throw new ModelNotFoundException('Usuario no encontrado');
+        }
+
+        // Podríamos cargar relaciones aquí, como productos cuando existan modelos de productos
+        return [
+            'status' => 'success',
+            'data' => $usuario
+        ];
+    }
 }

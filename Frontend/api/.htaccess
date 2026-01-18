@@ -1,0 +1,31 @@
+# =========================================
+# CONFIGURACIÓN PRINCIPAL PARA Project-Front
+# =========================================
+
+# 1. Permitir acceso a archivos PHP
+<FilesMatch "\.php$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>
+
+# 2. Prevenir acceso directo a archivos de configuración
+<FilesMatch "^(config|\.htaccess)">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# 3. Habilitar motor de reescritura
+RewriteEngine On
+
+# 4. Redirigir la raíz y /index.php a welcome.php
+RewriteRule ^(index\.php)?$ welcome.php [L]
+
+# 5. Respaldo de DirectoryIndex (si no hay URL especificada)
+DirectoryIndex welcome.php index.php login.php
+
+# 6. Opcional: redirigir URLs amigables a PHP
+# Por ejemplo: /producto/12 -> producto.php?id=12
+# RewriteRule ^producto/([0-9]+)$ producto.php?id=$1 [L,QSA]
+
+# 7. Evitar listado de directorios
+Options -Indexes

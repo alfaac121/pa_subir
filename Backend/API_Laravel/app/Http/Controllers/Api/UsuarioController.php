@@ -10,6 +10,7 @@ use App\DTOs\Usuario\EditarPerfil\InputDto as EditarPerfilInputDto;
 use App\Contracts\Usuario\Services\IUsuarioService;
 use App\Contracts\Usuario\Services\IBloqueadoService;
 use App\DTOs\Usuario\Bloqueados\InputDto as BloqueadoInputDto;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class UsuarioController
 {
@@ -18,6 +19,24 @@ class UsuarioController
         private IBloqueadoService $bloqueadoService
     ) 
     {}
+
+    public function verPerfilPublico(int $id)
+    {
+        try {
+            $perfil = $this->usuarioService->verPerfilPublico($id);
+            return response()->json($perfil);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'Error',
+                'message' => 'Usuario no encontrado'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'Error',
+                'message' => 'Ocurrió un error al obtener el perfil'
+            ], 500);
+        }
+    }
 
     public function update(int $id, EditarPerfilRequest $request)
     {

@@ -105,7 +105,7 @@ class AuthService implements IAuthService
         try {
             $registroTerminado = $this->registroService->terminarRegistro($datosEncriptados, $clave, $cuenta_id, $dispositivo);
 
-            if ($registroTerminado['status'] !== 'success') {
+            if (!$registroTerminado['success']) {
                 Log::error('Error en el Registro del usuario', [
                     'cuenta_id' => $cuenta_id,
                     'dispositivo' => $dispositivo,
