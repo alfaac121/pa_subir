@@ -47,7 +47,7 @@ $avatar = getAvatarUrl($usuario['imagen']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfil de <?php echo htmlspecialchars($usuario['nickname']); ?> - Tu Mercado SENA</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=<?= time(); ?>">
     <style>
 
 
@@ -168,7 +168,7 @@ $avatar = getAvatarUrl($usuario['imagen']);
                         Tu Mercado SENA
                     </a>
                 </h1>
-                <nav class="nav">
+                <nav class="nav nav-desktop">
                     <a href="index.php">Inicio</a>
                     <a href="favoritos.php">Favoritos</a>
                     <?php if ($user): ?>
@@ -187,8 +187,9 @@ $avatar = getAvatarUrl($usuario['imagen']);
             </div>
         </div>
     </header>
-
-
+    
+    <?php if ($user): ?>
+<?php endif; ?>
 
     <main class="main">
         <div class="profile-content">
@@ -262,3 +263,4 @@ $avatar = getAvatarUrl($usuario['imagen']);
     <script src="script.js"></script>
 </body>
 </html>
+

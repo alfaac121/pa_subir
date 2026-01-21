@@ -217,3 +217,4 @@ function getProductMainImage($producto_id) {
  */
 
 ?>
+

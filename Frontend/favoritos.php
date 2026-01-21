@@ -66,7 +66,7 @@ $stmt->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mis Favoritos - Tu Mercado SENA</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=<?= time(); ?>">
 </head>
 <body>
     <header class="header">
@@ -78,7 +78,7 @@ $stmt->close();
                         Tu Mercado SENA
                     </a>
                 </h1>
-                <nav class="nav">
+                <nav class="nav nav-desktop">
                     <a href="index.php">Menú Principal</a>
                     <a href="publicar.php">Publicar Producto</a>
                     <a href="perfil.php" class="perfil-link">
@@ -94,6 +94,8 @@ $stmt->close();
             </div>
         </div>
     </header>
+    
+    <?php include 'includes/bottom_nav.php'; ?>
 
     <main class="main">
         <div class="container">
@@ -167,3 +169,5 @@ $stmt->close();
 </script>
 </body>
 </html>
+
+

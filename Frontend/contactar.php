@@ -86,3 +86,4 @@ $conn->close();
 header("Location: chat.php?id=$chat_id");
 exit;
 ?>
+

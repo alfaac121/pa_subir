@@ -82,7 +82,7 @@ if (isset($_GET['cancelar'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verificar Código - Tu Mercado SENA</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=<?= time(); ?>">
     <style>
         .verification-code {
             display: flex;
@@ -244,3 +244,4 @@ if (isset($_GET['cancelar'])) {
     </script>
 </body>
 </html>
+

@@ -79,7 +79,7 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat - Tu Mercado SENA</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=<?= time(); ?>">
 </head>
 <body>
     <header class="header">
@@ -90,7 +90,7 @@ $conn->close();
       <img src="logo_new.png"  class="logo-img">
       Tu Mercado SENA   
   </a>
-</h1>                <nav class="nav">
+</h1>                <nav class="nav nav-desktop">
                      <a href="index.php" class="<?= $current_page == 'index.php' ? 'active' : '' ?>">Menu Principal</a>
                     <a href="mis_productos.php">Mis Productos</a>
                     <a href="favoritos.php">Favoritos</a>
@@ -114,6 +114,8 @@ $conn->close();
             </div>
         </div>
     </header>
+    
+    <?php include 'includes/bottom_nav.php'; ?>
 
     <main class="main">
         <div class="container">
@@ -176,4 +178,6 @@ $conn->close();
     <script src="script.js"></script>
 </body>
 </html>
+
+
 

@@ -17,6 +17,59 @@ function initTheme() {
 
 document.addEventListener('DOMContentLoaded', initTheme);
 
+// ==================== MENÚ HAMBURGUESA ====================
+function initHamburgerMenu() {
+    const menuToggle = document.getElementById('menuToggle');
+    const menuClose = document.getElementById('menuClose');
+    const mainNav = document.getElementById('mainNav');
+    const menuOverlay = document.getElementById('menuOverlay');
+
+    if (!menuToggle || !mainNav) return;
+
+    // Abrir menú
+    menuToggle.addEventListener('click', function (e) {
+        e.stopPropagation();
+        menuToggle.classList.toggle('active');
+        mainNav.classList.toggle('active');
+        if (menuOverlay) menuOverlay.classList.toggle('active');
+        document.body.style.overflow = mainNav.classList.contains('active') ? 'hidden' : '';
+    });
+
+    // Cerrar menú con botón X
+    if (menuClose) {
+        menuClose.addEventListener('click', function () {
+            closeHamburgerMenu();
+        });
+    }
+
+    // Cerrar menú con overlay
+    if (menuOverlay) {
+        menuOverlay.addEventListener('click', function () {
+            closeHamburgerMenu();
+        });
+    }
+
+    // Cerrar menú al hacer clic en un enlace
+    const navLinks = mainNav.querySelectorAll('a');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function () {
+            // Pequeño delay para ver el efecto antes de navegar
+            setTimeout(closeHamburgerMenu, 100);
+        });
+    });
+}
+
+function closeHamburgerMenu() {
+    const menuToggle = document.getElementById('menuToggle');
+    const mainNav = document.getElementById('mainNav');
+    const menuOverlay = document.getElementById('menuOverlay');
+
+    if (menuToggle) menuToggle.classList.remove('active');
+    if (mainNav) mainNav.classList.remove('active');
+    if (menuOverlay) menuOverlay.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
 function toggleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme');
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -567,6 +620,9 @@ function scrollModalToBottom() {
 document.addEventListener('DOMContentLoaded', function () {
     // Inicializar tema
     initTheme();
+
+    // Inicializar menú hamburguesa
+    initHamburgerMenu();
 
     // Toggle de tema
     const themeToggle = document.getElementById('themeToggle');

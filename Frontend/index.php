@@ -77,20 +77,20 @@ $categorias_result = $conn->query($categorias_query);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tu Mercado SENA - Marketplace</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=<?= time(); ?>">
 </head>
 <body>
     <header class="header">
         <div class="container">
             <div class="header-content">
-              <h1 class="logo">
-    <a href="index.php">
-        <img src="logo_new.png"  class="logo-img">
-        Tu Mercado SENA
-    </a>
-</h1>
-<nav class="nav">
-
+                <h1 class="logo">
+                    <a href="index.php">
+                        <img src="logo_new.png" class="logo-img">
+                        Tu Mercado SENA
+                    </a>
+                </h1>
+                
+                <nav class="nav nav-desktop">
                     <a href="mis_productos.php">Mis Productos</a>
                     <a href="favoritos.php">Favoritos</a>
                     <a href="publicar.php">Publicar Producto</a>
@@ -100,17 +100,18 @@ $categorias_result = $conn->query($categorias_query);
                         <div class="chats-list" id="chatsList"></div>
                     </div>
                     <a href="perfil.php" class="perfil-link">
-         <div class="user-avatar-container">
-    <img src="<?= getAvatarUrl($user['imagen']); ?>" 
-         class="avatar-header" alt="Mi Avatar">
-    <span class="user-name-footer"><?php echo htmlspecialchars($user['nickname']); ?></span>
-</div>
-
+                        <div class="user-avatar-container">
+                            <img src="<?= getAvatarUrl($user['imagen']); ?>" 
+                                 class="avatar-header" alt="Mi Avatar">
+                            <span class="user-name-footer"><?php echo htmlspecialchars($user['nickname']); ?></span>
+                        </div>
                     </a>
                 </nav>
             </div>
         </div>
     </header>
+    
+    <?php include 'includes/bottom_nav.php'; ?>
 
     <main class="main">
         <div class="container">
@@ -186,9 +187,10 @@ $categorias_result = $conn->query($categorias_query);
             <p>&copy; 2025 Tu Mercado SENA. Todos los derechos reservados.</p>
         </div>
     </footer>
-    <script src="script.js"></script>
+    <script src="script.js?v=<?= time(); ?>"></script>
 </body>
 </html>
 <?php
 $conn->close();
 ?>
+

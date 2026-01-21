@@ -25,7 +25,7 @@ if (isLoggedIn()) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bienvenido - Tu Mercado SENA</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=<?= time(); ?>">
     <style>
         * {
             margin: 0;
@@ -501,3 +501,4 @@ if (isLoggedIn()) {
     </script>
 </body>
 </html> 
+
