@@ -195,40 +195,30 @@ $conn->close();
     </style>
 </head>
 <body>
-    <header class="header">
-        <div class="container">
-            <div class="header-content">
-                <h1 class="logo">
-                    <a href="index.php">
-                        <img src="logo_new.png" class="logo-img" alt="Tu Mercado SENA">
-                        Tu Mercado SENA
-                    </a>
-                </h1>
-                <nav class="nav nav-desktop">
-                    <a href="index.php">Inicio</a>
-                    <a href="mis_productos.php">Mis Productos</a>
-                    <a href="favoritos.php">Favoritos</a>
-                    <?php if ($user): ?>
-                    <div class="notification-badge">
-                        <i class="ri-chat-3-line notification-icon" id="notificationIcon" title="Chats y notificaciones"></i>
-                        <span class="notification-count hidden" id="notificationCount">0</span>
-                        <div class="chats-list" id="chatsList"></div>
+    <?php
+    if ($user) {
+        include 'includes/header.php';
+    } else {
+        // Header simplificado para invitados
+        ?>
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <h1 class="logo">
+                        <a href="index.php">
+                            <img src="logo_new.png" class="logo-img" alt="Logo">
+                            <span class="logo-text">Tu Mercado SENA</span>
+                        </a>
+                    </h1>
+                    <div class="header-right">
+                        <a href="login.php" class="btn-primary">Iniciar Sesión</a>
                     </div>
-                    <a href="perfil.php" class="perfil-link">
-                        <div class="user-avatar-container">
-                             <img src="<?php echo getAvatarUrl($user['imagen']); ?>"
-                            alt="Avatar de <?php echo htmlspecialchars($user['nickname']); ?>"
-                            class="avatar-header" id="headerAvatar">
-                            <span class="user-name-footer"><?php echo htmlspecialchars($user['nickname']); ?></span>
-                        </div>
-                    </a>
-                    <?php else: ?>
-                    <a href="login.php" class="btn-primary">Iniciar Sesión</a>
-                    <?php endif; ?>
-                </nav>
+                </div>
             </div>
-        </div>
-    </header>
+        </header>
+        <?php
+    }
+    ?>
 
     <main class="main">
         <div class="profile-content">

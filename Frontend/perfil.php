@@ -19,7 +19,7 @@ if ($usuario_id <= 0) {
 ================================ */
 $stmt = $conn->prepare("
     SELECT 
-        u.id AS usuario_id,
+        u.id,
         u.cuenta_id,
         u.nickname,
         u.descripcion,
@@ -191,46 +191,7 @@ $conn->close();
     <link rel="stylesheet" href="styles.css?v=<?= time(); ?>">
 </head>
 <body>
-    <?php
-    $current_page = basename($_SERVER['PHP_SELF']);
-    ?>
-    <header class="header">
-        <div class="container">
-            <div class="header-content">
-               <h1 class="logo">
-                <a href="index.php">
-                    <img src="logo_new.png" class="logo-img">
-                    Tu Mercado SENA
-                </a>
-                </h1>
-                <nav class="nav nav-desktop">
-
-                    <a href="index.php" class="<?= $current_page == 'index.php' ? 'active' : '' ?>">Menu Principal</a>
-                    
-                    <a href="mis_productos.php" class="<?= $current_page == 'mis_productos.php' ? 'active' : '' ?>">
-                        Mis Productos
-                    </a>
-                    <a href="favoritos.php">Favoritos</a>
-                    <a href="publicar.php" class="<?= $current_page == 'publicar.php' ? 'active' : '' ?>">
-                        Publicar Producto
-                    </a>
-                    <div class="notification-badge">
-                        <i class="ri-chat-3-line notification-icon" id="notificationIcon" title="Chats y notificaciones"></i>
-                        <span class="notification-count hidden" id="notificationCount">0</span>
-                        <div class="chats-list" id="chatsList"></div>
-                    </div>
-                    <a href="perfil.php" class="perfil-link">
-                        <div class="user-avatar-container">
-                            <img src="<?php echo getAvatarUrl($user['imagen']); ?>"
-                                 alt="Avatar de <?php echo htmlspecialchars($user['nickname']); ?>"
-                                 class="avatar-header">
-                            <span class="user-name-footer"><?php echo htmlspecialchars($user['nickname']); ?></span>
-                        </div>
-                    </a>
-                </nav>
-            </div>
-        </div>
-    </header>
+    <?php include 'includes/header.php'; ?>
     
     <?php include 'includes/bottom_nav.php'; ?>
 
@@ -354,12 +315,12 @@ $conn->close();
         <div class="settings-group">
             <h3>Apariencia</h3>
             <div class="toggle-switch">
-                <label for="apariencia">Modo oscuro</label>
-                <label class="switch">
-                    <button class="theme-toggle" id="themeToggle" title="Cambiar tema">🌓</button>
-                </label>
+                <label for="themeToggle">Modo oscuro</label>
+                <button class="theme-toggle settings-theme-toggle" id="themeToggle" title="Cambiar tema">
+                    <i class="ri-moon-line"></i>
+                </button>
             </div>
-            <small>Activar modo oscuro en toda la aplicación</small>
+            <small>Personaliza la apariencia de tu interfaz</small>
         </div>
 
 

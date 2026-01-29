@@ -86,7 +86,7 @@ function getCurrentUser() {
             u.descripcion,
             u.link,
             u.estado_id,
-            c.email AS correo
+            c.email
         FROM usuarios u
         INNER JOIN cuentas c ON u.cuenta_id = c.id
         WHERE u.id = ?
