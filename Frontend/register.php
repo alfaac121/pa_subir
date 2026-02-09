@@ -103,8 +103,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     // Insertar usuario
                     $stmt = $conn->prepare("
-                        INSERT INTO usuarios (cuenta_id, nickname, imagen, descripcion, link, rol_id, estado_id, visible)
-                        VALUES (?, ?, ?, ?, ?, 3, 1, 1)
+                        INSERT INTO usuarios (cuenta_id, nickname, imagen, descripcion, link, rol_id, estado_id)
+                        VALUES (?, ?, ?, ?, ?, 3, 1)
                     ");
                     $stmt->bind_param("issss", $cuentaId, $nombre, $imagenNombre, $descripcion, $link);
 
