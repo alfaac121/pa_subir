@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once 'config.php';
 
 if (!isLoggedIn()) {
@@ -15,6 +15,35 @@ if ($usuario_id <= 0) {
 }
 
 /* ===============================
+   LÓGICA DE USUARIOS BLOQUEADOS
+================================ */
+if (isset($_GET['desbloquear'])) {
+    $desbloquear_id = (int)$_GET['desbloquear'];
+    $stmt = $conn->prepare("DELETE FROM bloqueados WHERE bloqueador_id = ? AND bloqueado_id = ?");
+    $stmt->bind_param("ii", $usuario_id, $desbloquear_id);
+    $stmt->execute();
+    $stmt->close();
+    header("Location: perfil.php?section=privacidad&status=unblock_success");
+    exit;
+}
+
+// Obtener lista de bloqueados
+$lista_bloqueados = [];
+$stmt_bloq = $conn->prepare("
+    SELECT b.bloqueado_id, u.nickname, u.imagen 
+    FROM bloqueados b
+    JOIN usuarios u ON b.bloqueado_id = u.id
+    WHERE b.bloqueador_id = ?
+");
+$stmt_bloq->bind_param("i", $usuario_id);
+$stmt_bloq->execute();
+$res_bloq = $stmt_bloq->get_result();
+while ($row_bloq = $res_bloq->fetch_assoc()) {
+    $lista_bloqueados[] = $row_bloq;
+}
+$stmt_bloq->close();
+
+/* ===============================
    OBTENER USUARIO + CUENTA
 ================================ */
 $stmt = $conn->prepare("
@@ -25,6 +54,8 @@ $stmt = $conn->prepare("
         u.descripcion,
         u.link,
         u.imagen,
+        u.estado_id,
+        u.fecha_actualiza,
         c.email,
         c.notifica_correo,
         c.notifica_push,
@@ -67,20 +98,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($nickname === '') {
             $error = 'El nombre es obligatorio';
+        } elseif (strlen($nickname) < 3 || strlen($nickname) > 32) {
+            $error = 'El nombre debe tener entre 3 y 32 caracteres';
+        } elseif (strlen($descripcion) > 512) {
+            $error = 'La Descripción no puede exceder 512 caracteres';
+        } elseif (!empty($link) && !filter_var($link, FILTER_VALIDATE_URL)) {
+            $error = 'El enlace debe ser una URL válida (comenzar con http:// o https://)';
         } else {
-            $stmt = $conn->prepare("
-                UPDATE usuarios 
-                SET nickname = ?, descripcion = ?, link = ?
-                WHERE id = ?
-            ");
-            $stmt->bind_param("sssi", $nickname, $descripcion, $link, $usuario_id);
-
-            if ($stmt->execute()) {
-                $success = 'Perfil actualizado correctamente';
-            } else {
-                $error = 'Error al actualizar el perfil';
+            // Verificar restricción de 24 horas
+            $puede_editar = true;
+            if ($user['fecha_actualiza'] && $user['fecha_actualiza'] != '2000-01-01 05:00:00') {
+                $ultima = strtotime($user['fecha_actualiza']);
+                $ahora = time();
+                $diferencia = $ahora - $ultima;
+                if ($diferencia < 86400) { // 24 horas en segundos
+                    $restante = ceil((86400 - $diferencia) / 3600);
+                    $error = "Solo puedes editar tu perfil cada 24 horas. Intenta en $restante hora(s).";
+                    $puede_editar = false;
+                }
             }
-            $stmt->close();
+            
+            if ($puede_editar) {
+                $stmt = $conn->prepare("
+                    UPDATE usuarios 
+                    SET nickname = ?, descripcion = ?, link = ?, fecha_actualiza = NOW()
+                    WHERE id = ?
+                ");
+                $stmt->bind_param("sssi", $nickname, $descripcion, $link, $usuario_id);
+
+                if ($stmt->execute()) {
+                    $success = 'Perfil actualizado correctamente';
+                } else {
+                    $error = 'Error al actualizar el perfil';
+                }
+                $stmt->close();
+            }
         }
     }
 
@@ -111,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $file['size'] <= 2097152
             ) {
                 $name = uniqid('avatar_') . '.' . $ext;
-                $path = "assets/images/avatars/$name";
+                $path = "uploads/usuarios/$name";
 
                 if (move_uploaded_file($file['tmp_name'], __DIR__ . "/$path")) {
                     $stmt = $conn->prepare("UPDATE usuarios SET imagen = ? WHERE id = ?");
@@ -130,27 +182,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    /* ===== CONFIGURACIÓN ===== */
+    /* ===== CONFIGURACIÓN Y PRIVACIDAD ===== */
     elseif ($section === 'configuracion') {
 
+        // Datos de Configuración
         $correo = isset($_POST['notifica_correo']) ? 1 : 0;
         $push   = isset($_POST['notifica_push']) ? 1 : 0;
         $datos  = isset($_POST['uso_datos']) ? 1 : 0;
+        
+        // Datos de Privacidad
+        $visible = isset($_POST['perfil_visible']) ? 1 : 0;
 
+        // 1. Actualizar tabla cuentas (Configuración)
         $stmt = $conn->prepare("
             UPDATE cuentas 
             SET notifica_correo = ?, notifica_push = ?, uso_datos = ?
             WHERE id = ?
         ");
         $stmt->bind_param("iiii", $correo, $push, $datos, $cuenta_id);
+        $res1 = $stmt->execute();
+        $stmt->close();
+        
+        // 2. Actualizar tabla usuarios (Privacidad/Visibilidad)
+        $stmt2 = $conn->prepare("UPDATE usuarios SET visible = ? WHERE id = ?");
+        $stmt2->bind_param("ii", $visible, $usuario_id);
+        $res2 = $stmt2->execute();
+        $stmt2->close();
 
-        if ($stmt->execute()) {
+        if ($res1 && $res2) {
             header("Location: perfil.php?section=configuracion&status=ok");
             exit;
         } else {
-            $error = 'Error al actualizar configuración';
+            $error = 'Error al actualizar la configuración';
         }
-        $stmt->close();
     }
 
     /* ===== SEGURIDAD ===== */
@@ -161,9 +225,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $confirm = $_POST['password_confirm'] ?? '';
 
         if (!password_verify($actual, $user['password'])) {
-            $error = 'Contraseña actual incorrecta';
-        } elseif ($nueva !== $confirm || strlen($nueva) < 6) {
-            $error = 'Contraseñas inválidas';
+            $error = 'contraseña actual incorrecta';
+        } elseif ($nueva !== $confirm) {
+            $error = 'Las contraseñas no coinciden';
+        } elseif (strlen($nueva) < 8) {
+            $error = 'La contraseña debe tener al menos 8 caracteres';
+        } elseif (!preg_match('/[A-Z]/', $nueva)) {
+            $error = 'La contraseña debe contener al menos una mayúscula';
+        } elseif (!preg_match('/[a-z]/', $nueva)) {
+            $error = 'La contraseña debe contener al menos una minúscula';
+        } elseif (!preg_match('/[0-9]/', $nueva)) {
+            $error = 'La contraseña debe contener al menos un número';
         } else {
             $hash = password_hash($nueva, PASSWORD_DEFAULT);
             $stmt = $conn->prepare("UPDATE cuentas SET password = ? WHERE id = ?");
@@ -175,6 +247,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
     }
+    
 
     $active_section = $section;
 }
@@ -203,13 +276,16 @@ $conn->close();
                         <li><a href="#" data-section="perfil" class="<?php echo $active_section === 'perfil' ? 'active' : ''; ?>">Información Personal</a></li>
                         <li><a href="#" data-section="configuracion" class="<?php echo $active_section === 'configuracion' ? 'active' : ''; ?>">Configuración</a></li>
                         <li><a href="#" data-section="seguridad" class="<?php echo $active_section === 'seguridad' ? 'active' : ''; ?>">Seguridad</a></li>
+                        <li><a href="historial.php">Historial de Transacciones</a></li>
                         
-                        <a href="logout.php" onclick="return confirmarLogout();">Cerrar sesión</a>
-                        <script>
-                            function confirmarLogout() {
-                                return confirm("¿Estás seguro de que deseas cerrar sesión?");
-                            }
-                        </script></li>  
+                        <li>
+                            <a href="logout.php" onclick="return confirmarLogout();" style="color: var(--color-danger);">Cerrar sesión</a>
+                            <script>
+                                function confirmarLogout() {
+                                    return confirm("¿Estás seguro de que deseas cerrar sesión?");
+                                }
+                            </script>
+                        </li>
                     </ul>
                 </div>
                 
@@ -279,14 +355,14 @@ $conn->close();
             <h3>Datos Básicos</h3>
 
             <div class="form-group">
-                <label for="nombre">Nombre de Usuario *</label>
+                <label for="nickname">Nombre de Usuario *</label>
                 <input type="text" id="nickname" name="nickname"
-                    value="<?php echo htmlspecialchars($user['nickname']); ?>" required>
+                    value="<?php echo htmlspecialchars($user['nickname']); ?>" required autocomplete="username">
             </div>
 
             <div class="form-group">
                 <label for="email">Correo Electrónico</label>
-                <input type="email" id="email" value="<?php echo htmlspecialchars($user['email']); ?>" disabled>
+                <input type="email" id="email" value="<?php echo htmlspecialchars($user['email']); ?>" disabled autocomplete="email">
                 <small>El correo no se puede cambiar</small>
             </div>
 
@@ -323,6 +399,18 @@ $conn->close();
             <small>Personaliza la apariencia de tu interfaz</small>
         </div>
 
+        <div class="settings-group">
+            <h3>Privacidad y Visibilidad</h3>
+            <div class="toggle-switch">
+                <label for="perfil_visible">Mi perfil es visible</label>
+                <label class="switch">
+                    <input type="checkbox" id="perfil_visible" name="perfil_visible" 
+                           <?php echo ($user['visible'] ?? 1) == 1 ? 'checked' : ''; ?>>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <small>Si desactivas esta opción, otros usuarios no podrán ver tu perfil ni tus productos.</small>
+        </div>
 
         <div class="settings-group">
             <h3>Notificaciones</h3>
@@ -349,7 +437,6 @@ $conn->close();
         
         <div class="settings-group">
             <h3>Ahorro de Datos</h3>
-            
             <div class="toggle-switch">
                 <label for="uso_datos">Modo Ahorro de Datos</label>
                 <label class="switch">
@@ -361,9 +448,21 @@ $conn->close();
             <small>Reduce el consumo de datos evitando cargar imágenes automáticamente</small>
         </div>
         
-        <button type="submit" class="btn-primary">Guardar Configuración</button>
+        <div class="settings-group">
+            <h3>Gestión de Usuarios Bloqueados</h3>
+            <p style="margin-bottom: 15px;">Gestiona la lista de usuarios que has bloqueado para que no puedan contactarte.</p>
+            
+            <a href="bloqueados.php" class="btn-secondary" style="display: inline-block; text-align: center; width: 100%;">
+                <i class="ri-user-forbid-line" style="vertical-align: middle; margin-right: 5px;"></i>
+                Gestionar Usuarios Bloqueados
+            </a>
+        </div>
+
+        <button type="submit" class="btn-primary" style="margin-top: 20px;">Guardar Configuración</button>
     </form>
 </div>
+<!-- Sección: Privacidad -->
+
  <!-- Sección: Seguridad -->
                     <div id="seguridad" class="settings-section <?php echo $active_section === 'seguridad' ? 'active' : ''; ?>">
                         <h2>Seguridad</h2>
@@ -371,26 +470,26 @@ $conn->close();
                             <input type="hidden" name="section" value="seguridad">
                             
                             <div class="settings-group">
-                                <h3>Cambiar Contraseña</h3>
+                                <h3>Cambiar contraseña</h3>
                                 
                                 <div class="form-group">
-                                    <label for="password_actual">Contraseña Actual *</label>
-                                    <input type="password" id="password_actual" name="password_actual" required>
+                                    <label for="password_actual">contraseña Actual *</label>
+                                    <input type="password" id="password_actual" name="password_actual" required autocomplete="current-password">
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="password_nueva">Nueva Contraseña *</label>
-                                    <input type="password" id="password_nueva" name="password_nueva" required minlength="6">
-                                    <small>Mínimo 6 caracteres</small>
+                                    <label for="password_nueva">Nueva contraseña *</label>
+                                    <input type="password" id="password_nueva" name="password_nueva" required minlength="8" autocomplete="new-password">
+                                    <small>Mínimo 8 caracteres, incluir mayúscula, minúscula y número</small>
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="password_confirm">Confirmar Nueva Contraseña *</label>
-                                    <input type="password" id="password_confirm" name="password_confirm" required minlength="6">
+                                    <label for="password_confirm">Confirmar Nueva contraseña *</label>
+                                    <input type="password" id="password_confirm" name="password_confirm" required minlength="6" autocomplete="new-password">
                                 </div>
                             </div>
                             
-                            <button type="submit" class="btn-primary">Cambiar Contraseña</button>
+                            <button type="submit" class="btn-primary">Cambiar contraseña</button>
                         </form>
                     </div>
                 </div>

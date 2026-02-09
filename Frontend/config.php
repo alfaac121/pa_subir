@@ -8,7 +8,7 @@
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'tu_mercado_sena_2');
+define('DB_NAME', 'tu_mercado_sena');
 
 // Iniciar sesión
 if (session_status() === PHP_SESSION_NONE) {
@@ -44,21 +44,21 @@ function getDBConnection() {
  */
 function getAvatarUrl($imagen) {
     if (empty($imagen)) {
-        return 'assets/images/avatars/defa.jpg';
+        return 'assets/images/default-avatar.jpg';
     }
     
     // Si ya trae la ruta, no la repetimos
-    if (strpos($imagen, 'assets/images/avatars/') === 0) {
+    if (strpos($imagen, 'uploads/usuarios/') === 0) {
         $fullPath = $imagen;
     } else {
-        $fullPath = 'assets/images/avatars/' . $imagen;
+        $fullPath = 'uploads/usuarios/' . $imagen;
     }
 
     if (file_exists($fullPath)) {
         return $fullPath;
     }
     
-    return 'assets/images/avatars/defa.jpg';
+    return 'assets/images/default-avatar.jpg';
 }
 /**
  * Verifica si el usuario está logueado
@@ -86,7 +86,12 @@ function getCurrentUser() {
             u.descripcion,
             u.link,
             u.estado_id,
-            c.email
+            u.visible,
+            u.fecha_reciente,
+            c.email,
+            c.notifica_correo,
+            c.notifica_push,
+            c.uso_datos
         FROM usuarios u
         INNER JOIN cuentas c ON u.cuenta_id = c.id
         WHERE u.id = ?
@@ -195,7 +200,7 @@ function getProductImage($productId) {
     $result = $stmt->get_result();
     
     $row = $result->fetch_assoc();
-    return $row ? "uploads/" . $row['imagen'] : "assets/images/default-product.jpg";
+    return $row ? "uploads/productos/" . $row['imagen'] : "assets/images/default-product.jpg";
 }
 function getProductMainImage($producto_id) {
     $conn = getDBConnection();
@@ -206,7 +211,7 @@ function getProductMainImage($producto_id) {
     $stmt->close();
     $conn->close();
 
-    return $res ? "uploads/" . $res['imagen'] : "images/placeholder.jpg";
+    return $res ? "uploads/productos/" . $res['imagen'] : "assets/images/default-product.jpg";
 }
 
 /**

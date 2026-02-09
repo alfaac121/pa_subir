@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once 'config.php';
 
 if (!isLoggedIn()) {
@@ -124,8 +124,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $res_old = $stmt_old->get_result()->fetch_assoc();
                     $stmt_old->close();
 
-                    if ($res_old && file_exists("uploads/" . $res_old['imagen'])) {
-                        unlink("uploads/" . $res_old['imagen']);
+                    if ($res_old && file_exists("uploads/productos/" . $res_old['imagen'])) {
+                        unlink("uploads/productos/" . $res_old['imagen']);
                     }
 
                     // borrar registros antiguos
@@ -138,14 +138,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $ext = pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION);
                     $filename = uniqid("img_", true) . "." . $ext;
 
-                    if (move_uploaded_file($_FILES['imagen']['tmp_name'], "uploads/" . $filename)) {
+                    if (move_uploaded_file($_FILES['imagen']['tmp_name'], "uploads/productos/" . $filename)) {
                         // guardar nueva imagen
                         $stmt_insert = $conn->prepare("INSERT INTO fotos (producto_id, imagen) VALUES (?, ?)");
                         $stmt_insert->bind_param("is", $producto_id, $filename);
                         $stmt_insert->execute();
                         $stmt_insert->close();
 
-                        // 🔄 RECARGAR FOTO ACTUAL DESPUÉS DE ACTUALIZAR
+                        // ðŸ”„ RECARGAR FOTO ACTUAL DESPUÃ‰S DE ACTUALIZAR
                         $stmt_reload = $conn->prepare("SELECT imagen FROM fotos WHERE producto_id = ? ORDER BY id ASC LIMIT 1");
                         $stmt_reload->bind_param("i", $producto_id);
                         $stmt_reload->execute();
@@ -208,7 +208,7 @@ $conn->close();
                     </div>
                     
                     <div class="form-group">
-                        <label for="descripcion">Descripción *</label>
+                        <label for="descripcion">DescripciÃ³n *</label>
                         <textarea id="descripcion" name="descripcion" rows="5" required maxlength="512"><?php echo htmlspecialchars($producto['descripcion']); ?></textarea>
                     </div>
                     
@@ -227,9 +227,9 @@ $conn->close();
                     </div>
                     
                     <div class="form-group">
-                        <label for="subcategoria_id">Categoría *</label>
+                        <label for="subcategoria_id">CategorÃ­a *</label>
                         <select id="subcategoria_id" name="subcategoria_id" required>
-                            <option value="">Selecciona una categoría</option>
+                            <option value="">Selecciona una categorÃ­a</option>
                             <?php
                             $current_categoria = '';
                             foreach ($subcategorias as $subcat):
@@ -249,7 +249,7 @@ $conn->close();
                     </div>
                     
                    <div class="form-group">
-    <label for="integridad_id">Condición *</label>
+    <label for="integridad_id">CondiciÃ³n *</label>
     <select id="integridad_id" name="integridad_id" required>
         <?php 
         $integridad_result->data_seek(0);
@@ -263,7 +263,7 @@ $conn->close();
     </select>
 </div>
 
-<!-- Estado (Debajo de Condición) -->
+<!-- Estado (Debajo de CondiciÃ³n) -->
 <div class="form-group">
     <label for="estado_id">Estado *</label>
     <select id="estado_id" name="estado_id" required>
@@ -281,10 +281,10 @@ $conn->close();
                         <label for="imagen">Nueva Imagen del Producto (opcional)</label>
                         <?php if (!empty($foto_actual['imagen'])): ?>
 <p>Imagen actual:</p>
-<img src="uploads/<?php echo htmlspecialchars($foto_actual['imagen']); ?>" style="max-width:200px;">
+<img src="uploads/productos/<?php echo htmlspecialchars($foto_actual['imagen']); ?>" style="max-width:200px;">
 <?php endif; ?>
                         <input type="file" id="imagen" name="imagen" accept="image/jpeg,image/jpg,image/png,image/gif">
-                        <small>Formatos aceptados: JPG, PNG, GIF. Deja vacío para mantener la imagen actual.</small>
+                        <small>Formatos aceptados: JPG, PNG, GIF. Deja vacÃ­o para mantener la imagen actual.</small>
                     </div>
                     
                     <button type="submit" class="btn-primary">Guardar Cambios</button>
@@ -302,6 +302,7 @@ $conn->close();
     <script src="script.js"></script>
 </body>
 </html>
+
 
 
 

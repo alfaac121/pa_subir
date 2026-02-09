@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once 'config.php';
 forceLightTheme();
 
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $imagenNombre = 'avatar_' . uniqid() . '.' . $extension;
             
             // Crear directorio si no existe
-            $uploadDir = 'assets/images/avatars/';
+            $uploadDir = 'uploads/usuarios/';
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0755, true);
             }
@@ -78,8 +78,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->close();
                 
                 // Eliminar imagen subida si el registro falla
-                if (!empty($imagenNombre) && file_exists('assets/images/avatars/' . $imagenNombre)) {
-                    unlink('assets/images/avatars/' . $imagenNombre);
+                if (!empty($imagenNombre) && file_exists('uploads/usuarios/' . $imagenNombre)) {
+                    unlink('uploads/usuarios/' . $imagenNombre);
                 }
             } else {
                 $stmt->close();
@@ -103,10 +103,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     // Insertar usuario
                     $stmt = $conn->prepare("
-                        INSERT INTO usuarios (cuenta_id, nickname, imagen, descripcion, link, rol_id, estado_id)
-                        VALUES (?, ?, ?, ?, ?, 3, 1)
+                        INSERT INTO usuarios (cuenta_id, nickname, imagen, descripcion, link, rol_id, estado_id, visible)
+                        VALUES (?, ?, ?, ?, ?, 3, 1, 1)
                     ");
                     $stmt->bind_param("issss", $cuentaId, $nombre, $imagenNombre, $descripcion, $link);
+
                     $stmt->execute();
                     $stmt->close();
                     
@@ -125,8 +126,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $error = "Error al crear la cuenta. Intenta de nuevo.";
                     
                     // Eliminar imagen subida si el registro falla
-                    if (!empty($imagenNombre) && file_exists('assets/images/avatars/' . $imagenNombre)) {
-                        unlink('assets/images/avatars/' . $imagenNombre);
+                    if (!empty($imagenNombre) && file_exists('uploads/usuarios/' . $imagenNombre)) {
+                        unlink('uploads/usuarios/' . $imagenNombre);
                     }
                 }
             }
@@ -154,16 +155,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             width: 120px;
             height: 120px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #ffffff; /* Fondo blanco */
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
             cursor: pointer;
             transition: all 0.3s ease;
-            border: 4px solid rgba(255,255,255,0.3);
+            border: 3px dashed var(--color-primary); /* Borde discontinuo verde */
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             position: relative;
+        }
+        .avatar-preview .avatar-icon {
+            font-size: 48px;
+            color: var(--color-primary); /* Icono verde */
         }
         .avatar-preview:hover {
             transform: scale(1.05);
@@ -173,10 +178,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             width: 100%;
             height: 100%;
             object-fit: cover;
-        }
-        .avatar-preview .avatar-icon {
-            font-size: 48px;
-            color: rgba(255,255,255,0.7);
         }
         .avatar-preview .overlay {
             position: absolute;
@@ -213,8 +214,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-box">
+    <!-- Header superior -->
+    <header class="header">
+        <div class="header-content" style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: flex-start; gap: 20px; padding: 0 20px;">
+            <img src="logo_new.png" alt="SENA" style="height: 70px; width: auto;">
+            <span style="font-size: 1.5rem; font-weight: 800; color: white;">Tu Mercado SENA</span>
+        </div>
+    </header>
+
+    <div class="auth-container" style="margin-top: 20px;">
+        <div class="auth-box" style="width: 500px; margin: 40px 0;"> <!-- Un poco más ancho para el registro -->
             <h1 class="auth-title">
             Registro
             </h1>
@@ -260,16 +269,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <textarea id="descripcion" name="descripcion" maxlength="300" rows="3" placeholder="Cuéntanos sobre ti..."></textarea>
                     <small>Máximo 300 caracteres</small>
                 </div>
-                <div class="form-group">
-                    <label for="link">Red Social (opcional)</label>
-                    <input type="url" id="link" name="link" placeholder="https://instagram.com/tu_usuario">
-                    <small>YouTube, Instagram, Facebook, Twitter o LinkedIn</small>
-                </div>
                 <button type="submit" class="btn-primary">Registrarse</button>
             </form>
-            <p class="auth-link">¿Ya tienes cuenta? <a href="login.php">Inicia sesión aquí</a></p>
+            <p class="auth-link">¿Ya tienes cuenta? <a href="login.php" style="color: var(--color-primary);">Inicia sesión aquí</a></p>
+            <p class="auth-link"><small>Debes tener un correo @sena.edu.co para registrarte</small></p>
         </div>
     </div>
+
+    <!-- Barra inferior -->
+    <footer style="background-color: var(--color-primary); color: white; text-align: center; padding: 15px; font-size: 0.9rem; font-weight: 500;">
+        © 2025 Tu Mercado SENA. Todos los derechos reservados.
+    </footer>
+</body>
+
     <script src="script.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -335,3 +347,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </script>
 </body>
 </html>
+

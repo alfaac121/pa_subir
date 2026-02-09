@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once 'config.php';
 
 if (!isLoggedIn()) {
@@ -47,32 +47,27 @@ $conn->close();
     <link rel="stylesheet" href="styles.css?v=<?= time(); ?>">
 
     <style>
-        .alert-success {
-            background: #d4ffd8;
-            color: #155724;
-            border: 1px solid #6dd17c;
-            padding: 12px;
-            margin: 15px 0;
-            border-radius: 6px;
-            text-align: center;
-            font-size: 16px;
-        }
         .btn-delete {
-            background: #d9534f;
+            background: var(--color-danger);
             color: #fff;
-            padding: 6px 10px;
-            border-radius: 5px;
+            padding: 8px 12px;
+            border-radius: 8px;
             text-decoration: none;
             font-size: 14px;
             transition: .2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
         .btn-delete:hover {
-            background: #c9302c;
+            filter: brightness(0.9);
+            transform: translateY(-1px);
         }
         .product-actions {
             display: flex;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 8px;
+            margin-top: 15px;
+            flex-wrap: wrap;
         }
     </style>
 
@@ -104,7 +99,7 @@ $conn->close();
                             <a href="producto.php?id=<?php echo $producto['id']; ?>">
 
 <?php if (!empty($producto['producto_imagen'])): ?>
-    <img src="uploads/<?php echo htmlspecialchars($producto['producto_imagen']); ?>"
+    <img src="uploads/productos/<?php echo htmlspecialchars($producto['producto_imagen']); ?>"
          alt="<?php echo htmlspecialchars($producto['nombre']); ?>"
          class="product-image">
 <?php else: ?>
@@ -127,10 +122,16 @@ $conn->close();
                                 </div>
                             </a>
 
-                            <div class="product-actions">
+                            <div class="product-actions" style="display: flex; gap: 4px; flex-wrap: wrap;">
                                 <a href="editar_producto.php?id=<?php echo $producto['id']; ?>" class="btn-small">Editar</a>
+                                
+                                <button type="button" 
+                                        onclick="toggleVisibilidad(<?php echo $producto['id']; ?>, this)" 
+                                        class="btn-small" 
+                                        style="background: var(--color-secondary); color: white;">
+                                    <?php echo $producto['estado_id'] == 1 ? 'Ocultar' : 'Mostrar'; ?>
+                                </button>
 
-                                <!-- BOTÓN ELIMINAR CON CONFIRMACIÓN -->
                                 <a href="eliminar_producto.php?id=<?php echo $producto['id']; ?>"
                                    class="btn-delete"
                                    onclick="return confirm('¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.');">
@@ -138,11 +139,13 @@ $conn->close();
                                 </a>
                             </div>
 
+
                         </div>
                     <?php endwhile; ?>
                 <?php else: ?>
                     <div class="no-products">
                         <p>No has publicado ningún producto todavía.</p>
+
                         <a href="publicar.php" class="btn-primary">Publicar tu primer producto</a>
                     </div>
                 <?php endif; ?>
@@ -155,8 +158,34 @@ $conn->close();
             <p>&copy; 2025 Tu Mercado SENA. Todos los derechos reservados.</p>
         </div>
     </footer>
-    <script src="script.js"></script>
+    <script>
+    function toggleVisibilidad(id, btn) {
+        fetch(`api/toggle_visibilidad.php?id=${id}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const card = btn.closest('.product-card');
+                    const statusSpan = card.querySelector('.product-status');
+                    
+                    if (data.nuevo_estado === 2) {
+                        btn.textContent = 'Mostrar';
+                        statusSpan.textContent = 'invisible';
+                        statusSpan.className = 'product-status status-2';
+                    } else {
+                        btn.textContent = 'Ocultar';
+                        statusSpan.textContent = 'activo';
+                        statusSpan.className = 'product-status status-1';
+                    }
+                    alert('Visibilidad actualizada');
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(err => alert('Error de conexion'));
+    }
+    </script>
 </body>
 </html>
+
 
 

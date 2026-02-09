@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * API de Productos con Paginación
+ * API de Productos con PaginaciÃ³n
  * Endpoint para cargar productos de forma paginada (infinite scroll)
  */
 
@@ -15,7 +15,10 @@ if (!isLoggedIn()) {
     exit;
 }
 
-// Parámetros de paginación
+$user = getCurrentUser();
+
+
+// ParÃ¡metros de paginaciÃ³n
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 $limit = isset($_GET['limit']) ? min(24, max(6, (int)$_GET['limit'])) : 12; // Entre 6 y 24, default 12
 $offset = ($page - 1) * $limit;
@@ -24,6 +27,9 @@ $offset = ($page - 1) * $limit;
 $categoria_id = isset($_GET['categoria']) ? (int)$_GET['categoria'] : 0;
 $busqueda = isset($_GET['busqueda']) ? sanitize($_GET['busqueda']) : '';
 $orden = isset($_GET['orden']) ? sanitize($_GET['orden']) : 'newest';
+$integridad_id = isset($_GET['integridad']) ? (int)$_GET['integridad'] : 0;
+$precio_min = isset($_GET['precio_min']) ? (float)$_GET['precio_min'] : 0;
+$precio_max = isset($_GET['precio_max']) ? (float)$_GET['precio_max'] : 0;
 
 try {
     $conn = getDBConnection();
@@ -34,7 +40,8 @@ try {
         INNER JOIN usuarios u ON p.vendedor_id = u.id
         INNER JOIN subcategorias sc ON p.subcategoria_id = sc.id
         INNER JOIN categorias c ON sc.categoria_id = c.id
-        WHERE p.estado_id = 1 AND u.estado_id = 1";
+        WHERE p.estado_id = 1 AND u.estado_id = 1 AND u.visible = 1 AND p.vendedor_id != ?
+        AND p.vendedor_id NOT IN (SELECT bloqueado_id FROM bloqueados WHERE bloqueador_id = ?)";
     
     // Query de productos
     $query = "SELECT 
@@ -58,10 +65,12 @@ try {
     INNER JOIN categorias c ON sc.categoria_id = c.id
     INNER JOIN integridad i ON p.integridad_id = i.id
     LEFT JOIN fotos f ON f.producto_id = p.id
-    WHERE p.estado_id = 1 AND u.estado_id = 1";
+    WHERE p.estado_id = 1 AND u.estado_id = 1 AND u.visible = 1 AND p.vendedor_id != ?
+    AND p.vendedor_id NOT IN (SELECT bloqueado_id FROM bloqueados WHERE bloqueador_id = ?)";
     
-    $params = [];
-    $types = '';
+    $params = [$user['id'], $user['id']];
+    $types = 'ii';
+
     
     // Aplicar filtros
     if ($categoria_id > 0) {
@@ -78,6 +87,27 @@ try {
         $params[] = $search_term;
         $params[] = $search_term;
         $types .= 'ss';
+    }
+
+    if ($integridad_id > 0) {
+        $query .= " AND p.integridad_id = ?";
+        $countQuery .= " AND p.integridad_id = ?";
+        $params[] = $integridad_id;
+        $types .= 'i';
+    }
+
+    if ($precio_min > 0) {
+        $query .= " AND p.precio >= ?";
+        $countQuery .= " AND p.precio >= ?";
+        $params[] = $precio_min;
+        $types .= 'd';
+    }
+
+    if ($precio_max > 0) {
+        $query .= " AND p.precio <= ?";
+        $countQuery .= " AND p.precio <= ?";
+        $params[] = $precio_max;
+        $types .= 'd';
     }
     
     // Obtener total de productos
@@ -99,7 +129,7 @@ try {
         default => 'p.fecha_registro DESC' // newest
     };
     
-    // Agregar ordenamiento y paginación
+    // Agregar ordenamiento y paginaciÃ³n
     $query .= " GROUP BY p.id ORDER BY $orderBy LIMIT ? OFFSET ?";
     $params[] = $limit;
     $params[] = $offset;
@@ -131,9 +161,9 @@ try {
             'categoria_nombre' => $row['categoria_nombre'],
             'subcategoria_nombre' => $row['subcategoria_nombre'],
             'integridad' => $row['integridad_nombre'],
-            // Usar imagen del producto o placeholder dinámico de picsum
+            // Usar imagen del producto o placeholder dinÃ¡mico de picsum
             'imagen' => !empty($row['producto_imagen']) 
-                ? 'uploads/' . $row['producto_imagen'] 
+                ? 'uploads/productos/' . $row['producto_imagen'] 
                 : 'https://picsum.photos/seed/' . $row['id'] . '/400/300'
         ];
     }
@@ -141,13 +171,14 @@ try {
     $stmt->close();
     $conn->close();
     
-    // Calcular información de paginación
+    // Calcular informaciÃ³n de paginaciÃ³n
     $totalPages = ceil($totalProductos / $limit);
     $hasMore = $page < $totalPages;
     
     echo json_encode([
         'success' => true,
         'productos' => $productos,
+        'uso_datos' => (int)$user['uso_datos'],
         'pagination' => [
             'page' => $page,
             'limit' => $limit,
@@ -165,3 +196,4 @@ try {
     ]);
 }
 ?>
+

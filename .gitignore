@@ -1,9 +1,4 @@
-# archivos y carpetas que siempre deben ser ignorados
-__pycache__
-build/
-*.exe
-*.rar
-/vendor
-.env
-.vscode
-Backend/PoblarDB/.vscode
+# Ignorar todo dentro de uploads
+uploads/**
+# Pero permitir archivos .txt
+!uploads/**/*.txt

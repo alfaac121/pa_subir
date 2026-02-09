@@ -1,4 +1,4 @@
-
+﻿
 
 <?php 
 
@@ -22,7 +22,7 @@ $conn = getDBConnection();
 
 // 1. Verificar que el producto existe y pertenece al usuario
 $stmt = $conn->prepare("SELECT vendedor_id FROM productos WHERE id = ?");
-if (!$stmt) die("❌ Error en prepare: " . $conn->error);
+if (!$stmt) die("âŒ Error en prepare: " . $conn->error);
 
 $stmt->bind_param("i", $producto_id);
 $stmt->execute();
@@ -48,11 +48,11 @@ $resFotos = $stmt->get_result();
 
 $fotos = [];
 while($f = $resFotos->fetch_assoc()){
-    $fotos[] = "uploads/" . $f['imagen'];
+    $fotos[] = "uploads/productos/" . $f['imagen'];
 }
 $stmt->close();
 
-// 3. Iniciar la transacción
+// 3. Iniciar la transacciÃ³n
 $conn->begin_transaction();
 
 try {
@@ -97,7 +97,7 @@ try {
     $success = false;
 }
 
-// 4. Eliminar archivos físicos de las fotos
+// 4. Eliminar archivos fÃ­sicos de las fotos
 if ($success) {
     foreach ($fotos as $ruta) {
         if (file_exists($ruta)) unlink($ruta);
@@ -112,4 +112,5 @@ if ($success) {
 
 exit;
 ?>
+
 

@@ -24,472 +24,390 @@ forceLightTheme();
             box-sizing: border-box;
         }
 
-        .welcome-wrapper {
+        body {
+            background-color: var(--color-bg-light);
+            font-family: 'Outfit', sans-serif;
             min-height: 100vh;
-            background: linear-gradient(
-                rgba(83, 131, 146, 0.85), 
-                rgba(143, 182, 191, 0.90)
-            ), url('https://uploads.candelaestereo.com/1/2023/11/nuevo-contrato-para-aprendices-sena-816x496.jpg');
-            background-size: cover;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Cabecera Estilo SENA */
+        .welcome-header {
+            background-color: var(--color-primary);
+            color: white;
+            padding: 15px 0;
+            width: 100%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start !important;
+            padding: 0 20px;
+            gap: 20px;
+        }
+
+        .header-logo {
+            height: 70px; /* Logo más grande */
+            width: auto;
+        }
+
+        .header-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: white;
+            letter-spacing: -0.5px;
+        }
+
+        /* Carousel Styles */
+        .carousel-container {
+            width: 100%;
+            height: 250px; /* Un poco más alto para que el 'cover' no recorte tanto */
+            overflow: hidden;
+            position: relative;
+            margin-top: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .carousel-wrapper {
+            display: flex;
+            width: 300%;
+            height: 100%;
+            animation: slide 15s infinite ease-in-out;
+        }
+
+        .carousel-slide {
+            flex: 0 0 33.333%; /* Ocupa exactamente un tercio del wrapper (que es el 100% del contenedor) */
+            width: 33.333%;
+            height: 100%;
+            background-size: 100% 100%; /* Forzar a que ocupe todo el recuadro sin huecos */
             background-position: center;
-            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+
+        @keyframes slide {
+            0% { transform: translateX(0); }
+            30% { transform: translateX(0); }
+            33% { transform: translateX(-33.33%); }
+            63% { transform: translateX(-33.33%); }
+            66% { transform: translateX(-66.66%); }
+            96% { transform: translateX(-66.66%); }
+            100% { transform: translateX(0); }
+        }
+
+        /* Contenedor Principal */
+        .welcome-main {
+            flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
-            position: relative;
-            overflow: hidden;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 40px 20px;
         }
 
-        .welcome-wrapper::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(circle at 20% 80%, rgba(169, 179, 242, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(84, 94, 160, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(74, 76, 122, 0.2) 0%, transparent 50%);
-            animation: pulse 8s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 0.8; }
-        }
-
-        .welcome-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            max-width: 1200px;
+        .welcome-card {
+            background: white;
             width: 100%;
-            background: var(--color-white);
-            border-radius: 20px;
+            max-width: 1150px; /* Ensanchado de 1000px a 1150px */
+            display: grid;
+            grid-template-columns: 48% 52%; /* Ajuste ligero de proporción */
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.12);
             min-height: 600px;
-            position: relative;
-            z-index: 1;
         }
 
-        .welcome-hero {
-            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
-            padding: 60px 40px;
+        /* Lado Izquierdo - Green */
+        .card-hero {
+            background-color: var(--color-primary);
+            color: white;
+            padding: 50px 40px; /* Restaurado padding estándar */
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: flex-start;
-            color: var(--color-white);
+            gap: 25px;
             position: relative;
-            overflow: hidden;
         }
 
-        .welcome-hero::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 100%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: sparkle 3s infinite linear;
-        }
-
-        @keyframes sparkle {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .hero-content {
-            position: relative;
-            z-index: 2;
-        }
-
-        .welcome-logo {
-            width: 120px;
-            height: auto;
+        .hero-brand {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 20px !important;
             margin-bottom: 30px;
-            display: block;
-            transition: transform 0.3s ease;
         }
 
-        .welcome-logo:hover {
-            transform: scale(1.05);
+        .hero-logo {
+            width: 100px !important; /* Más grande como pidió antes */
+            height: auto !important;
+            margin-bottom: 0 !important;
+            flex-shrink: 0;
         }
 
         .hero-title {
-            font-size: 3.5rem;
-            font-weight: 800;
-            margin-bottom: 20px;
-            line-height: 1.1;
-            background: linear-gradient(135deg, #fff 0%, var(--color-light) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-size: 2.5rem !important;
+            font-weight: 800 !important;
+            margin: 0 !important;
+            line-height: 1.1 !important;
+            white-space: nowrap;
         }
 
-        .hero-subtitle {
-            font-size: 1.3rem;
-            margin-bottom: 30px;
-            opacity: 0.9;
+        .hero-desc {
+            font-size: 0.95rem;
             line-height: 1.6;
-            color: #ecf0f1;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            opacity: 0.95;
+            margin-bottom: 20px;
         }
 
-        .hero-features {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-top: 40px;
+        .features-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
         }
 
-        .feature {
+        .feature-item {
             display: flex;
             align-items: center;
             gap: 15px;
-            font-size: 1.1rem;
-            color: #ecf0f1;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
 
-        .feature-icon {
-            width: 40px;
-            height: 40px;
-            background: rgba(255,255,255,0.2);
+        .feature-circle {
+            width: 38px;
+            height: 38px;
+            background: var(--color-bg-secondary);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.2rem;
-            backdrop-filter: blur(10px);
+            flex-shrink: 0;
+            color: var(--color-secondary);
         }
 
-        .welcome-form-section {
-            padding: 60px 50px;
+        .feature-text {
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        /* Lado Derecho - White */
+        .card-auth {
+            padding: 70px 60px; /* Más espacio para los botones */
             display: flex;
             flex-direction: column;
             justify-content: center;
-            background: var(--color-white);
+            align-items: center;
+            text-align: center;
         }
 
-        .form-title {
+        .auth-title {
             color: var(--color-primary);
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-            text-align: center;
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+            font-family: 'Outfit', sans-serif;
         }
 
-        .form-subtitle {
-            color: #2c3e50;
+        .auth-subtitle {
+            color: #666;
             font-size: 1.1rem;
-            margin-bottom: 40px;
-            text-align: center;
-            font-weight: 500;
-            text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+            margin-bottom: 45px;
         }
 
-        .welcome-buttons {
+        .auth-actions {
+            width: 100%;
+            max-width: 320px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            margin-top: 30px;
+            gap: 15px;
         }
 
         .btn-welcome {
-            padding: 18px 30px;
-            font-size: 1.2rem;
-            border-radius: 12px;
+            padding: 14px 25px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 8px;
             text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            text-align: center;
+            transition: all 0.2s ease;
+            display: block;
+        }
+
+        .btn-primary-custom {
+            background-color: var(--color-primary);
+            color: white;
             border: none;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(45, 199, 92, 0.2);
         }
 
-        .btn-welcome::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            transition: left 0.5s;
+        .btn-primary-custom:hover {
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(45, 199, 92, 0.3);
         }
 
-        .btn-welcome:hover::before {
-            left: 100%;
+        .btn-outline-custom {
+            background-color: white;
+            color: var(--color-secondary);
+            border: 2px solid var(--color-accent);
         }
 
-        .btn-welcome-login {
-            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
-            color: var(--color-white);
-            box-shadow: 0 10px 30px rgba(83, 131, 146, 0.3);
+        .btn-outline-custom:hover {
+            background-color: var(--color-bg-secondary);
+            transform: translateY(-2px);
         }
 
-        .btn-welcome-register {
-            background: var(--color-white);
-            color: var(--color-primary);
-            border: 2px solid var(--color-primary);
-            box-shadow: 0 5px 15px rgba(83, 131, 146, 0.1);
-        }
 
-        .btn-welcome:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(83, 131, 146, 0.4);
-        }
-
-        .welcome-footer {
-            margin-top: 40px;
-            text-align: center;
-            color: #2c3e50;
-            font-size: 0.9rem;
+        /* Footer Info */
+        .auth-footer {
+            margin-top: 50px;
             padding-top: 20px;
-            border-top: 1px solid var(--color-bg-secondary);
-            font-weight: 500;
-            text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+            border-top: 1.5px solid #eee;
+            width: 100%;
+            max-width: 350px;
         }
 
-        .sena-badge {
+        .info-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            color: #444;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .sena-tag {
+            background: var(--color-primary);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            font-weight: 700;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            gap: 5px;
+        }
+
+        /* Footer Bar */
+        .welcome-footer-bar {
+            background-color: var(--color-primary);
             color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.8rem;
-            margin-top: 10px;
-        }
-
-        /* Animaciones */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .hero-content > * {
-            animation: fadeInUp 0.8s ease-out;
-        }
-
-        .hero-content > *:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .hero-content > *:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        .welcome-form-section > * {
-            animation: fadeInUp 0.8s ease-out 0.6s both;
+            text-align: center;
+            padding: 15px;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
 
         /* Responsive */
-        @media (max-width: 968px) {
-            .welcome-container {
+        @media (max-width: 850px) {
+            .welcome-card {
                 grid-template-columns: 1fr;
-                max-width: 500px;
+                max-width: 450px;
             }
-            
-            .welcome-hero {
-                padding: 40px 30px;
-                text-align: center;
-                align-items: center;
+            .card-hero {
+                display: none; /* Como en muchas mobiles cards */
             }
-            
-            .hero-title {
-                font-size: 2.8rem;
+            .card-auth {
+                padding: 50px 30px;
             }
-            
-            .welcome-form-section {
-                padding: 40px 30px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .hero-title {
-                font-size: 2.2rem;
-            }
-            
-            .form-title {
-                font-size: 2rem;
-            }
-            
-            .btn-welcome {
-                padding: 15px 25px;
-                font-size: 1.1rem;
-            }
-        }
-
-        /* Efectos de partículas */
-        .particles {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .particle {
-            position: absolute;
-            background: rgba(255,255,255,0.3);
-            border-radius: 50%;
-            animation: float-particle 15s infinite linear;
-        }
-
-        @keyframes float-particle {
-            0% {
-                transform: translateY(100vh) rotate(0deg);
-                opacity: 0;
-            }
-            10% {
-                opacity: 1;
-            }
-            90% {
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(-100px) rotate(360deg);
-                opacity: 0;
-            }
-        }
-
-        /* Modo oscuro */
-        [data-theme="dark"] .welcome-form-section {
-            background: var(--color-bg);
-        }
-
-        [data-theme="dark"] .form-subtitle,
-        [data-theme="dark"] .welcome-footer {
-            color: var(--color-text-light);
-            text-shadow: none;
-        }
-
-        [data-theme="dark"] .btn-welcome-register {
-            background: var(--color-bg-secondary);
-            color: var(--color-text);
-        }
-
-        [data-theme="dark"] .btn-welcome-register:hover {
-            background: var(--color-primary);
-            color: var(--color-white);
         }
     </style>
 </head>
 <body>
-    <div class="welcome-wrapper">
-        <!-- Partículas animadas -->
-        <div class="particles" id="particles"></div>
-        
-        <div class="welcome-container">
-            <!-- Sección Hero (izquierda) -->
-            <div class="welcome-hero">
-                <div class="hero-content">
-                    <!-- Logo sin efectos de caja -->
-                    <img src="logo_new.png" alt="Tu Mercado SENA" class="welcome-logo">
-                    <h1 class="hero-title">Tu Mercado SENA</h1>
-                    <p class="hero-subtitle">
-                        La plataforma exclusiva para la comunidad SENA. Compra, vende y conecta de forma segura con aprendices e instructores.
-                    </p>
-                    
-                    <div class="hero-features">
-                        <div class="feature">
-                            <div class="feature-icon">🛒</div>
-                            <span>Compra productos de calidad</span>
-                        </div>
-                        <div class="feature">
-                            <div class="feature-icon">💰</div>
-                            <span>Vende lo que ya no uses</span>
-                        </div>
-                        <div class="feature">
-                            <div class="feature-icon">💬</div>
-                            <span>Chat seguro integrado</span>
-                        </div>
-                        <div class="feature">
-                            <div class="feature-icon">🔒</div>
-                            <span>Comunidad verificada SENA</span>
-                        </div>
+    <!-- Header superior -->
+    <header class="welcome-header">
+        <div class="header-content" style="display: flex; align-items: center; gap: 20px; padding: 0 20px; max-width: 1200px; margin: 0 auto;">
+            <img src="logo_new.png" alt="SENA" class="header-logo" style="height: 90px; width: auto;">
+            <span class="header-title" style="font-size: 2.2rem; font-weight: 800; color: white;">Tu Mercado SENA</span>
+        </div>
+    </header>
+
+    <!-- Contenedor principal -->
+    <main class="welcome-main">
+        <div class="welcome-card">
+            <!-- Lado Izquierdo - Green -->
+            <div class="card-hero">
+                <div class="hero-brand" style="display: flex; align-items: center; gap: 20px; margin-bottom: 30px;">
+                    <img src="logo_new.png" alt="Logo" class="hero-logo" style="width: 110px !important; height: auto;">
+                    <h2 class="hero-title" style="margin: 0; font-size: 2.5rem; font-weight: 800;">Tu Mercado SENA</h2>
+                </div>
+                
+                <p class="hero-desc">
+                    La plataforma exclusiva para la comunidad SENA. Compra, vende y conecta de forma segura con aprendices.
+                </p>
+                
+                <div class="features-list">
+                    <div class="feature-item">
+                        <div class="feature-circle"><i class="ri-shopping-cart-line"></i></div>
+                        <span class="feature-text">Compra productos de calidad</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-circle"><i class="ri-money-dollar-circle-line"></i></div>
+                        <span class="feature-text">Vende lo que ya no uses</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-circle"><i class="ri-chat-3-line"></i></div>
+                        <span class="feature-text">Chat seguro integrado</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-circle"><i class="ri-shield-check-line"></i></div>
+                        <span class="feature-text">Comunidad verificada SENA</span>
                     </div>
                 </div>
+
+                <!-- Carrusel de imágenes (Movido abajo) -->
+                <div class="carousel-container">
+                    <div class="carousel-wrapper">
+                        <div class="carousel-slide" style="background-image: url('assets/carousel/1.png');"></div>
+                        <div class="carousel-slide" style="background-image: url('assets/carousel/2.png');"></div>
+                        <div class="carousel-slide" style="background-image: url('assets/carousel/3.png');"></div>
+                    </div>
+                </div>
+
             </div>
 
-            <!-- Sección Formulario (derecha) -->
-            <div class="welcome-form-section">
-                <h2 class="form-title">¡Bienvenido!</h2>
-                <p class="form-subtitle">Únete a nuestra comunidad</p>
+            <!-- Lado blanco con botones -->
+            <div class="card-auth">
+                <h1 class="auth-title">¡Bienvenido!</h1>
+                <p class="auth-subtitle">Únete a nuestra comunidad</p>
 
-                <div class="welcome-buttons">
-                    <a href="login.php" class="btn-welcome btn-welcome-login">
+                <div class="auth-actions">
+                    <a href="login.php" class="btn-welcome btn-primary-custom">
                         Iniciar Sesión
                     </a>
-                    <a href="register.php" class="btn-welcome btn-welcome-register">
+                    <a href="register.php" class="btn-welcome btn-outline-custom">
                         Crear Cuenta
                     </a>
                 </div>
 
-                <div class="welcome-footer">
-                    <p>💡 <strong>Exclusivo para la comunidad SENA</strong></p>
-                    <div class="sena-badge">
-                        <span>🏫</span>
-                        Requiere correo @sena.edu.co
+                <div class="auth-footer">
+                    <div class="info-badge">
+                        💡 <span>Exclusivo para la comunidad SENA</span>
+                    </div>
+                    <div class="sena-tag">
+                        <i class="ri-mail-line"></i> Requiere correo @sena.edu.co
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
+
+    <!-- Barra inferior -->
+    <footer class="welcome-footer-bar">
+        © 2025 Tu Mercado SENA. Todos los derechos reservados.
+    </footer>
 
     <script>
-        // Forzar modo claro en welcome
-        document.addEventListener('DOMContentLoaded', function() {
-            localStorage.setItem('theme', 'light');
-            document.documentElement.setAttribute('data-theme', 'light');
-            
-            // Crear partículas animadas
-            createParticles();
-        });
-
-        function createParticles() {
-            const particlesContainer = document.getElementById('particles');
-            const particleCount = 15;
-            
-            for (let i = 0; i < particleCount; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                
-                // Tamaño aleatorio
-                const size = Math.random() * 6 + 2;
-                particle.style.width = `${size}px`;
-                particle.style.height = `${size}px`;
-                
-                // Posición inicial aleatoria
-                particle.style.left = `${Math.random() * 100}%`;
-                
-                // Animación con delay aleatorio
-                particle.style.animationDelay = `${Math.random() * 20}s`;
-                particle.style.animationDuration = `${15 + Math.random() * 10}s`;
-                
-                particlesContainer.appendChild(particle);
-            }
-        }
+        // Forzar modo claro
+        localStorage.setItem('theme', 'light');
+        document.documentElement.setAttribute('data-theme', 'light');
     </script>
+
+
 </body>
 </html> 
 

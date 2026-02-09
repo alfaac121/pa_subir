@@ -924,8 +924,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Remover active de todos los links
                 settingsLinks.forEach(l => l.classList.remove('active'));
                 // Mostrar sección seleccionada
-                document.getElementById(target).classList.add('active');
-                this.classList.add('active');
+                const targetElement = document.getElementById(target);
+                if (targetElement) {
+                    targetElement.classList.add('active');
+                    this.classList.add('active');
+                }
             }
         });
     });
@@ -1283,7 +1286,10 @@ const infiniteScrollState = {
     filters: {
         categoria: 0,
         busqueda: '',
-        orden: 'newest'
+        orden: 'newest',
+        integridad: 0,
+        precioMin: 0,
+        precioMax: 0
     }
 };
 
@@ -1319,9 +1325,13 @@ function setupAjaxFilters() {
     const searchInput = document.getElementById('searchInput');
     const categoryFilter = document.getElementById('categoryFilter');
     const sortFilter = document.getElementById('sortFilter');
+    const integridadFilter = document.getElementById('integridadFilter');
+    const precioMin = document.getElementById('precioMin');
+    const precioMax = document.getElementById('precioMax');
     const clearFiltersBtn = document.getElementById('clearFiltersBtn');
 
     let searchTimeout;
+    let priceTimeout;
 
     // Búsqueda con debounce (espera a que el usuario deje de escribir)
     if (searchInput) {
@@ -1352,6 +1362,35 @@ function setupAjaxFilters() {
         });
     }
 
+    // Filtro de integridad (condición)
+    if (integridadFilter) {
+        integridadFilter.addEventListener('change', (e) => {
+            infiniteScrollState.filters.integridad = parseInt(e.target.value) || 0;
+            applyFilters();
+        });
+    }
+
+    // Filtros de precio con debounce
+    if (precioMin) {
+        precioMin.addEventListener('input', (e) => {
+            clearTimeout(priceTimeout);
+            priceTimeout = setTimeout(() => {
+                infiniteScrollState.filters.precioMin = parseFloat(e.target.value) || 0;
+                applyFilters();
+            }, 500);
+        });
+    }
+
+    if (precioMax) {
+        precioMax.addEventListener('input', (e) => {
+            clearTimeout(priceTimeout);
+            priceTimeout = setTimeout(() => {
+                infiniteScrollState.filters.precioMax = parseFloat(e.target.value) || 0;
+                applyFilters();
+            }, 500);
+        });
+    }
+
     // Filtro de ordenamiento
     if (sortFilter) {
         sortFilter.addEventListener('change', (e) => {
@@ -1367,12 +1406,18 @@ function setupAjaxFilters() {
             if (searchInput) searchInput.value = '';
             if (categoryFilter) categoryFilter.value = '0';
             if (sortFilter) sortFilter.value = 'newest';
+            if (integridadFilter) integridadFilter.value = '0';
+            if (precioMin) precioMin.value = '';
+            if (precioMax) precioMax.value = '';
 
             // Resetear estado
             infiniteScrollState.filters = {
                 categoria: 0,
                 busqueda: '',
-                orden: 'newest'
+                orden: 'newest',
+                integridad: 0,
+                precioMin: 0,
+                precioMax: 0
             };
 
             // Recargar productos
@@ -1415,7 +1460,10 @@ function updateClearFiltersButton() {
 
     const hasFilters = infiniteScrollState.filters.categoria > 0 ||
         infiniteScrollState.filters.busqueda.length > 0 ||
-        infiniteScrollState.filters.orden !== 'newest';
+        infiniteScrollState.filters.orden !== 'newest' ||
+        infiniteScrollState.filters.integridad > 0 ||
+        infiniteScrollState.filters.precioMin > 0 ||
+        infiniteScrollState.filters.precioMax > 0;
 
     clearFiltersBtn.style.display = hasFilters ? 'inline-block' : 'none';
 }
@@ -1427,7 +1475,10 @@ function isSameFilters(savedFilters) {
     if (!savedFilters) return false;
     return savedFilters.categoria === infiniteScrollState.filters.categoria &&
         savedFilters.busqueda === infiniteScrollState.filters.busqueda &&
-        savedFilters.orden === infiniteScrollState.filters.orden;
+        savedFilters.orden === infiniteScrollState.filters.orden &&
+        savedFilters.integridad === infiniteScrollState.filters.integridad &&
+        savedFilters.precioMin === infiniteScrollState.filters.precioMin &&
+        savedFilters.precioMax === infiniteScrollState.filters.precioMax;
 }
 
 /**
@@ -1645,6 +1696,18 @@ async function loadProducts(page, isInitial = false) {
             params.append('busqueda', infiniteScrollState.filters.busqueda);
         }
 
+        if (infiniteScrollState.filters.integridad > 0) {
+            params.append('integridad', infiniteScrollState.filters.integridad);
+        }
+
+        if (infiniteScrollState.filters.precioMin > 0) {
+            params.append('precio_min', infiniteScrollState.filters.precioMin);
+        }
+
+        if (infiniteScrollState.filters.precioMax > 0) {
+            params.append('precio_max', infiniteScrollState.filters.precioMax);
+        }
+
         const response = await fetch(`api/productos.php?${params.toString()}`);
         const data = await response.json();
 
@@ -1655,6 +1718,8 @@ async function loadProducts(page, isInitial = false) {
             // Actualizar estado
             infiniteScrollState.hasMore = pagination.has_more;
             infiniteScrollState.totalProducts = pagination.total;
+            window.currentUsoDatos = data.uso_datos || 0;
+
 
             if (isInitial) {
                 // Limpiar grid y ocultar skeletons
@@ -1740,13 +1805,31 @@ function createProductCard(producto) {
         conditionClass = 'condition-usado';
     }
 
-    card.innerHTML = `
-        <a href="producto.php?id=${producto.id}">
-            <img src="${escapeHtml(producto.imagen)}" 
+    const usoDatos = window.currentUsoDatos || 0;
+    const imgSrc = producto.imagen;
+
+    let imgHTML = '';
+    if (usoDatos === 1) {
+        imgHTML = `
+            <div class="data-save-placeholder" onclick="this.innerHTML='<img src=\\'${escapeHtml(imgSrc)}\\' class=\\'product-image\\'>'; event.preventDefault(); event.stopPropagation();">
+                <i class="ri-image-line"></i>
+                <span>Clic para cargar imagen</span>
+            </div>
+        `;
+    } else {
+        imgHTML = `
+            <img src="${escapeHtml(imgSrc)}" 
                  alt="${escapeHtml(producto.nombre)}"
                  class="product-image"
                  loading="lazy"
-                 onerror="this.src='images/placeholder.jpg'">
+                 onerror="this.onerror=null; this.src='https://picsum.photos/seed/error/400/300?blur=5'">
+        `;
+
+    }
+
+    card.innerHTML = `
+        <a href="producto.php?id=${producto.id}">
+            ${imgHTML}
             <div class="product-info">
                 <h3 class="product-name">${escapeHtml(producto.nombre)}</h3>
                 <p class="product-price">${producto.precio_formateado}</p>
@@ -1757,6 +1840,7 @@ function createProductCard(producto) {
             </div>
         </a>
     `;
+
 
     return card;
 }
@@ -2155,3 +2239,286 @@ function changeMainImage(src, thumb) {
         thumb.classList.add('active');
     }
 }
+
+// ==================== BLOQUEAR USUARIOS (RF09-001) ====================
+/**
+ * Toggle bloqueo de usuario
+ */
+async function toggleBloqueo(usuarioId) {
+    if (!confirm('¿Estás seguro de que deseas bloquear a este usuario? No podrás ver sus productos ni recibir mensajes de él.')) {
+        return;
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('usuario_id', usuarioId);
+
+        const response = await fetch('api/toggle_bloqueo.php', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            if (data.action === 'bloqueado') {
+                showToast('Usuario bloqueado correctamente', 'success');
+                setTimeout(() => window.location.href = 'index.php', 1500);
+            } else {
+                showToast('Usuario desbloqueado', 'success');
+            }
+        } else {
+            showToast(data.error || 'Error al procesar la solicitud', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Error de conexión', 'error');
+    }
+}
+
+// ==================== ENVIAR IMAGEN EN CHAT (RF04-009) ====================
+/**
+ * Enviar imagen en el chat
+ */
+async function sendChatImage(chatId, file, mensaje = '') {
+    if (!file) return;
+
+    // Validar tipo de archivo
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+        showToast('Solo se permiten imágenes JPG, PNG, GIF o WebP', 'error');
+        return;
+    }
+
+    // Validar tamaño (máximo 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('La imagen no puede superar los 5MB', 'error');
+        return;
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('chat_id', chatId);
+        formData.append('imagen', file);
+        formData.append('mensaje', mensaje);
+
+        const response = await fetch('api/send_chat_image.php', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Recargar mensajes del chat
+            if (typeof loadChatMessages === 'function') {
+                loadChatMessages(chatId);
+            }
+            return data;
+        } else {
+            showToast(data.error || 'Error al enviar imagen', 'error');
+            return null;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Error de conexión', 'error');
+        return null;
+    }
+}
+
+// ==================== FINALIZAR VENTA (RF04-011) ====================
+/**
+ * Finalizar una venta/transacción
+ */
+async function finalizarVenta(chatId, precio = 0, cantidad = 1) {
+    if (!confirm('¿Confirmas que esta transacción se ha completado?')) {
+        return;
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('chat_id', chatId);
+        if (precio > 0) formData.append('precio', precio);
+        formData.append('cantidad', cantidad);
+
+        const response = await fetch('api/finalizar_venta.php', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('¡Transacción finalizada correctamente!', 'success');
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            showToast(data.error || 'Error al finalizar', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Error de conexión', 'error');
+    }
+}
+
+// ==================== ELIMINAR CHAT (RF04-010) ====================
+/**
+ * Eliminar un chat de la lista
+ */
+async function eliminarChat(chatId) {
+    if (!confirm('¿Eliminar esta conversación? El otro usuario aún podrá ver los mensajes.')) {
+        return;
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('chat_id', chatId);
+
+        const response = await fetch('api/eliminar_chat.php', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Chat eliminado', 'success');
+            setTimeout(() => window.location.href = 'chats.php', 1000);
+        } else {
+            showToast(data.error || 'Error al eliminar', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Error de conexión', 'error');
+    }
+}
+
+// ==================== UTILIDADES ====================
+/**
+ * Mostrar toast de notificación
+ */
+function showToast(message, type = 'info') {
+    // Remover toast existente
+    const existingToast = document.querySelector('.toast-notification');
+    if (existingToast) existingToast.remove();
+
+    const toast = document.createElement('div');
+    toast.className = `toast-notification toast-${type}`;
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : 'var(--color-primary)'};
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 9999;
+        animation: slideUp 0.3s ease;
+    `;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Estilos para animaciones de toast
+const toastStyles = document.createElement('style');
+toastStyles.textContent = `
+    @keyframes slideUp {
+        from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+        to { transform: translateX(-50%) translateY(0); opacity: 1; }
+    }
+    @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+    }
+`;
+document.head.appendChild(toastStyles);
+
+// ==================== SISTEMA DE REPORTE DE PRODUCTOS ====================
+
+/**
+ * Abre el modal de reporte de producto
+ */
+function abrirModalReporte(productoId) {
+    const modal = document.getElementById('modalReporte');
+    if (modal) {
+        document.getElementById('reporteProductoId').value = productoId;
+        // Limpiar selecciones previas
+        document.querySelectorAll('input[name="motivo_reporte"]').forEach(r => r.checked = false);
+        document.getElementById('comentarioReporte').value = '';
+        modal.style.display = 'flex';
+    }
+}
+
+/**
+ * Cierra el modal de reporte
+ */
+function cerrarModalReporte() {
+    const modal = document.getElementById('modalReporte');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+/**
+ * Envía el reporte del producto
+ */
+async function enviarReporte() {
+    const productoId = document.getElementById('reporteProductoId').value;
+    const motivoInput = document.querySelector('input[name="motivo_reporte"]:checked');
+    const comentario = document.getElementById('comentarioReporte').value;
+
+    if (!motivoInput) {
+        showToast('Selecciona un motivo para el reporte', 'error');
+        return;
+    }
+
+    const motivo = motivoInput.value;
+
+    try {
+        const response = await fetch('api/reportar_producto.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                producto_id: productoId,
+                motivo: motivo,
+                comentario: comentario
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast(data.message, 'success');
+            cerrarModalReporte();
+        } else {
+            showToast(data.error || 'Error al enviar el reporte', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Error de conexión', 'error');
+    }
+}
+
+// Cerrar modal al hacer clic fuera
+document.addEventListener('click', function (e) {
+    const modal = document.getElementById('modalReporte');
+    if (modal && e.target === modal) {
+        cerrarModalReporte();
+    }
+});
+
+// Cerrar modal con tecla Escape
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+        cerrarModalReporte();
+    }
+});

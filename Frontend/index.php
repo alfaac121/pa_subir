@@ -54,6 +54,23 @@ $categorias_result = $conn->query($categorias_query);
                         </select>
                     </div>
                     <div class="filter-group">
+                        <select id="integridadFilter" class="select-input">
+                            <option value="0">Condición</option>
+                            <?php
+                            $integridad_result = $conn->query("SELECT * FROM integridad ORDER BY id");
+                            while ($int = $integridad_result->fetch_assoc()): ?>
+                                <option value="<?php echo $int['id']; ?>">
+                                    <?php echo htmlspecialchars($int['nombre']); ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
+                    </div>
+                    <div class="filter-group filter-price">
+                        <input type="number" id="precioMin" placeholder="$ Mín" class="price-input" min="0">
+                        <span>-</span>
+                        <input type="number" id="precioMax" placeholder="$ Máx" class="price-input" min="0">
+                    </div>
+                    <div class="filter-group">
                         <select id="sortFilter" class="select-input">
                             <option value="newest">Más recientes</option>
                             <option value="oldest">Más antiguos</option>
@@ -112,7 +129,9 @@ $categorias_result = $conn->query($categorias_query);
                     busqueda: <?php echo json_encode($busqueda); ?>,
                     orden: 'newest'
                 };
+                window.currentUsoDatos = <?php echo (int)$user['uso_datos']; ?>;
             </script>
+
         </div>
     </main>
 

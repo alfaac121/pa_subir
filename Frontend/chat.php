@@ -91,21 +91,33 @@ $conn->close();
     <main class="main">
         <div class="container">
             <div class="chat-container">
-                <div class="chat-header">
-                    <h2>
-                    <?php echo htmlspecialchars($chat['producto_nombre']); ?> — 
-                     <?php echo htmlspecialchars($es_comprador ? $chat['vendedor_nombre'] : $chat['comprador_nombre']); ?>
-                    </h2>
-                   
-                    <p>Precio: <?php echo formatPrice($chat['producto_precio']); ?></p>
-                    <p>
-                        <?php if ($es_comprador): ?>
-                            Vendedor: <?php echo htmlspecialchars($chat['vendedor_nombre']); ?>
-                        <?php else: ?>
-                            Comprador: <?php echo htmlspecialchars($chat['comprador_nombre']); ?>
-                        <?php endif; ?>
-                    </p>
+                <div class="chat-header" style="position: relative;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <h2>
+                            <?php echo htmlspecialchars($chat['producto_nombre']); ?> — 
+                             <?php echo htmlspecialchars($es_comprador ? $chat['vendedor_nombre'] : $chat['comprador_nombre']); ?>
+                            </h2>
+                            <p>Precio: <?php echo formatPrice($chat['producto_precio']); ?></p>
+                            <p>
+                                <?php if ($es_comprador): ?>
+                                    Vendedor: <?php echo htmlspecialchars($chat['vendedor_nombre']); ?>
+                                <?php else: ?>
+                                    Comprador: <?php echo htmlspecialchars($chat['comprador_nombre']); ?>
+                                <?php endif; ?>
+                            </p>
+                        </div>
+                        
+                        <button type="button" 
+                                onclick="toggleSilencio(<?php echo $chat_id; ?>, this)" 
+                                class="btn-small" 
+                                style="background: var(--color-background); border: 1px solid var(--color-border); color: var(--color-text);">
+                            <i class="ri-notification-3-line"></i>
+                            <span id="txtSilencio"><?php echo ($es_comprador ? $chat['silenciado_comprador'] : $chat['silenciado_vendedor']) ? 'Silenciado' : 'Silenciar'; ?></span>
+                        </button>
+                    </div>
                 </div>
+
                 
                 <div class="chat-messages" id="chatMessages">
                     <?php 
@@ -146,9 +158,32 @@ $conn->close();
             <p>&copy; 2025 Tu Mercado SENA. Todos los derechos reservados.</p>
         </div>
     </footer>
+    <script>
+    function toggleSilencio(id, btn) {
+        fetch(`api/toggle_silencio.php?id=${id}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const txtSpan = document.getElementById('txtSilencio');
+                    const icon = btn.querySelector('i');
+                    if (data.silenciado) {
+                        txtSpan.textContent = 'Silenciado';
+                        icon.className = 'ri-notification-3-off-line';
+                    } else {
+                        txtSpan.textContent = 'Silenciar';
+                        icon.className = 'ri-notification-3-line';
+                    }
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(err => alert('Error de conexion'));
+    }
+    </script>
     <script src="script.js"></script>
 </body>
 </html>
+
 
 
 

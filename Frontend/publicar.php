@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once 'config.php';
 
 if (!isLoggedIn()) {
@@ -7,6 +7,7 @@ if (!isLoggedIn()) {
 }
 
 // Usuario ya está autenticado via sesión PHP
+
 
 $user = getCurrentUser();
 if ($user['estado_id'] != 1) {
@@ -24,7 +25,7 @@ $success = '';
 //}
 $conn = getDBConnection();
 
-// Obtener categorías y subcategorías
+// Obtener Categorías y subCategorías
 $categorias_query = "SELECT * FROM categorias ORDER BY nombre";
 $categorias_result = $conn->query($categorias_query);
 
@@ -74,6 +75,7 @@ if (isset($_FILES['imagenes']) && !empty($_FILES['imagenes']['name'][0])) {
     $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/avif', 'image/webp'];
 
     // Procesar hasta un máximo de 5 imágenes
+
     for ($i = 0; $i < min($total_imagenes, $max_imagenes); $i++) {
         if ($_FILES['imagenes']['error'][$i] === UPLOAD_ERR_OK) {
             $imagenTmp = $_FILES['imagenes']['tmp_name'][$i];
@@ -82,7 +84,7 @@ if (isset($_FILES['imagenes']) && !empty($_FILES['imagenes']['name'][0])) {
             if (in_array($imagenTipo, $allowedTypes)) {
                 $extension = pathinfo($_FILES['imagenes']['name'][$i], PATHINFO_EXTENSION);
                 $nombreArchivo = uniqid("img_") . "_" . $i . "." . $extension;
-                $rutaDestino = "uploads/" . $nombreArchivo;
+                $rutaDestino = "uploads/productos/" . $nombreArchivo;
 
                 if (move_uploaded_file($imagenTmp, $rutaDestino)) {
                     $stmtImg = $conn->prepare("INSERT INTO fotos (producto_id, imagen) VALUES (?, ?)");
@@ -107,6 +109,7 @@ if (isset($_FILES['imagenes']) && !empty($_FILES['imagenes']['name'][0])) {
 }
 
 // Obtener integridad para el formulario (siempre después del POST)
+
 $integridad_query = "SELECT * FROM integridad ORDER BY id";
 $integridad_result = $conn->query($integridad_query);
 
@@ -164,7 +167,7 @@ $conn->close();
                     <div class="form-group">
                         <label for="subcategoria_id">Categoría *</label>
                         <select id="subcategoria_id" name="subcategoria_id" required>
-                            <option value="">Selecciona una categoría</option>
+                            <option value="">Selecciona una Categoría</option>
                             <?php
                             $current_categoria = '';
                             foreach ($subcategorias as $subcat):
@@ -183,7 +186,7 @@ $conn->close();
                     </div>
                     
                     <div class="form-group">
-                        <label for="integridad_id">Condición *</label>
+                        <label for="integridad_id">condición *</label>
                         <select id="integridad_id" name="integridad_id" required>
                             <?php while ($int = $integridad_result->fetch_assoc()): ?>
                                 <option value="<?php echo $int['id']; ?>">
