@@ -86,7 +86,6 @@ function getCurrentUser() {
             u.descripcion,
             u.link,
             u.estado_id,
-            u.visible,
             u.fecha_reciente,
             c.email,
             c.notifica_correo,
