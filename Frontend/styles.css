@@ -1011,6 +1011,271 @@ body {
     margin-top: 0.5rem;
 }
 
+/* Mensaje de sistema (devoluciones, etc.) */
+.message-system {
+    align-self: center;
+    max-width: 90%;
+    background: linear-gradient(135deg, #FFF3CD 0%, #FFE69C 100%);
+    border: 2px solid #FFC107;
+    color: #856404;
+    text-align: center;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    margin: 1rem 0;
+}
+
+.system-message-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.system-message-content strong {
+    font-size: 1rem;
+    color: #856404;
+}
+
+.system-message-content p {
+    font-size: 0.9rem;
+    margin: 0;
+    opacity: 0.9;
+}
+
+/* Notificación flotante de devolución */
+.devolucion-notification {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    background: linear-gradient(135deg, #FFF3CD 0%, #FFE69C 100%);
+    border: 4px solid #FFC107;
+    border-radius: 16px;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4), 0 0 0 4px rgba(255, 193, 7, 0.2);
+    padding: 2rem;
+    max-width: 650px;
+    width: 90%;
+    animation: slideDown 0.5s ease-out, pulse 2s ease-in-out infinite;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0) scale(1);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4), 0 0 0 4px rgba(255, 193, 7, 0.2);
+    }
+    50% {
+        box-shadow: 0 15px 50px rgba(255, 193, 7, 0.7), 0 0 0 6px rgba(255, 193, 7, 0.4);
+    }
+}
+
+.devolucion-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    flex-direction: column;
+}
+
+.devolucion-content > i {
+    font-size: 3rem;
+    color: #FFC107;
+    flex-shrink: 0;
+    align-self: center;
+    animation: rotate 2s ease-in-out infinite;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+@keyframes rotate {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(-15deg);
+    }
+    75% {
+        transform: rotate(15deg);
+    }
+}
+
+.devolucion-info {
+    flex: 1;
+    text-align: center;
+}
+
+.devolucion-info h4 {
+    margin: 0 0 0.75rem 0;
+    color: #856404;
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.devolucion-info p {
+    margin: 0;
+    color: #856404;
+    font-size: 1.05rem;
+    opacity: 0.95;
+    line-height: 1.5;
+}
+
+.devolucion-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: center;
+}
+
+.devolucion-actions button {
+    padding: 0.85rem 1.75rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    transition: all 0.3s ease;
+    flex: 1;
+    min-width: 160px;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.5);
+}
+
+.btn-success:active:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.5);
+}
+
+.btn-danger:active:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+/* Responsive para notificación flotante */
+@media (max-width: 768px) {
+    .devolucion-notification {
+        top: 60px;
+        width: 95%;
+        padding: 1.5rem;
+    }
+    
+    .devolucion-content > i {
+        font-size: 2.5rem;
+    }
+    
+    .devolucion-info h4 {
+        font-size: 1rem;
+    }
+    
+    .devolucion-info p {
+        font-size: 0.9rem;
+    }
+    
+    .devolucion-actions {
+        flex-direction: column;
+    }
+    
+    .devolucion-actions button {
+        width: 100%;
+    }
+}
+
+/* Botón de solicitar devolución */
+.btn-devolucion {
+    display: none !important; /* OCULTO - Solo usar el del header */
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #FFC107 0%, #FFB300 100%);
+    color: #856404;
+    border: 2px solid #FFA000;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-devolucion:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+}
+
+.btn-devolucion i {
+    font-size: 1.2rem;
+}
+
+/* Botón de devolución en el header */
+.btn-devolucion-header {
+    padding: 0.6rem 1rem;
+    background: linear-gradient(135deg, #FFC107 0%, #FFB300 100%);
+    color: #856404;
+    border: 2px solid #FFA000;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    font-size: 0.9rem;
+}
+
+.btn-devolucion-header:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+}
+
+.btn-devolucion-header i {
+    font-size: 1.1rem;
+}
+
+/* Responsive para botón en header */
+@media (max-width: 768px) {
+    .btn-devolucion-header .btn-text {
+        display: none;
+    }
+    
+    .btn-devolucion-header {
+        padding: 0.6rem;
+        min-width: 40px;
+        justify-content: center;
+    }
+}
+
 .chat-input {
     padding: 1.5rem;
     border-top: 2px solid var(--border-color);
@@ -1303,9 +1568,54 @@ input:checked+.slider:before {
     align-items: center;
 }
 
+.chat-modal-header-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.chat-modal-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.chat-modal-subtitle {
+    font-size: 0.85rem;
+    opacity: 0.9;
+    font-weight: 400;
+}
+
 .chat-modal-header h3 {
     margin: 0;
     font-size: 1.2rem;
+}
+
+/* Botón de devolución en modal */
+.btn-devolucion-modal {
+    background: rgba(255, 193, 7, 0.2);
+    border: 2px solid rgba(255, 193, 7, 0.5);
+    color: #FFC107;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1.1rem;
+}
+
+.btn-devolucion-modal:hover {
+    background: rgba(255, 193, 7, 0.3);
+    border-color: #FFC107;
+    transform: scale(1.1);
+}
+
+.btn-devolucion-modal i {
+    font-size: 1.1rem;
 }
 
 .chat-modal-close {
@@ -1334,6 +1644,111 @@ input:checked+.slider:before {
     display: flex;
     flex-direction: column;
     max-height: calc(90vh - 120px);
+}
+
+/* Notificación de devolución en modal */
+.modal-devolucion-notification {
+    background: linear-gradient(135deg, #FFF3CD 0%, #FFE69C 100%);
+    border: 3px solid #FFC107;
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin: 1rem;
+    animation: slideDown 0.5s ease-out, pulse 2s ease-in-out infinite;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(255, 193, 7, 0.2);
+}
+
+.modal-devolucion-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.modal-devolucion-content > i {
+    font-size: 2rem;
+    color: #FFC107;
+    animation: rotate 2s ease-in-out infinite;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.modal-devolucion-info {
+    flex: 1;
+    min-width: 200px;
+}
+
+.modal-devolucion-info strong {
+    display: block;
+    color: #856404;
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+}
+
+.modal-devolucion-info p {
+    margin: 0;
+    color: #856404;
+    font-size: 0.95rem;
+    opacity: 0.95;
+    line-height: 1.4;
+}
+
+.modal-devolucion-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.5rem;
+}
+
+.btn-success-small,
+.btn-danger-small {
+    padding: 0.65rem 1.25rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+.btn-success-small {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+}
+
+.btn-success-small:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+}
+
+.btn-danger-small {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+}
+
+.btn-danger-small:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+}
+
+.btn-success-small:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+}
+
+.btn-danger-small {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+}
+
+.btn-danger-small:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
 }
 
 .chat-modal-messages {
@@ -4210,4 +4625,67 @@ input:checked+.slider:before {
 .btn-danger:hover {
     background: #c82333 !important;
     transform: translateY(-2px);
+}
+
+
+/* =====================================================
+   BOTONES DEL CHAT HEADER - CONFIRMAR COMPRA Y DEVOLVER
+   ===================================================== */
+
+/* Botón de Confirmar Compra */
+.btn-confirmar-compra {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    padding: 0.6rem 1rem !important;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3) !important;
+    transition: all 0.3s ease !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    left: auto !important;
+    height: auto !important;
+    width: auto !important;
+}
+
+.btn-confirmar-compra:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+}
+
+.btn-confirmar-compra i {
+    font-size: 1.1rem;
+}
+
+/* Asegurar que los botones del header SIEMPRE sean visibles */
+.chat-header .btn-confirmar-compra,
+.chat-header .btn-devolucion-header,
+.chat-header button[onclick*="mostrarFormularioConfirmacion"],
+.chat-header button[onclick*="mostrarFormularioDevolucion"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    left: auto !important;
+    height: auto !important;
+    width: auto !important;
+}
+
+/* Responsive para botones en header */
+@media (max-width: 768px) {
+    .btn-confirmar-compra span {
+        display: none;
+    }
+    
+    .btn-confirmar-compra {
+        padding: 0.6rem;
+        min-width: 40px;
+    }
 }

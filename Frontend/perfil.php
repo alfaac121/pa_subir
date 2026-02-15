@@ -182,39 +182,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    /* ===== CONFIGURACIÓN Y PRIVACIDAD ===== */
+    /* ===== CONFIGURACIÓN ===== */
     elseif ($section === 'configuracion') {
 
         // Datos de Configuración
         $correo = isset($_POST['notifica_correo']) ? 1 : 0;
         $push   = isset($_POST['notifica_push']) ? 1 : 0;
         $datos  = isset($_POST['uso_datos']) ? 1 : 0;
-        
-        // Datos de Privacidad
-        $visible = isset($_POST['perfil_visible']) ? 1 : 0;
 
-        // 1. Actualizar tabla cuentas (Configuración)
+        // Actualizar tabla cuentas
         $stmt = $conn->prepare("
             UPDATE cuentas 
             SET notifica_correo = ?, notifica_push = ?, uso_datos = ?
             WHERE id = ?
         ");
         $stmt->bind_param("iiii", $correo, $push, $datos, $cuenta_id);
-        $res1 = $stmt->execute();
-        $stmt->close();
         
-        // 2. Actualizar tabla usuarios (Privacidad/Visibilidad)
-        $stmt2 = $conn->prepare("UPDATE usuarios SET visible = ? WHERE id = ?");
-        $stmt2->bind_param("ii", $visible, $usuario_id);
-        $res2 = $stmt2->execute();
-        $stmt2->close();
-
-        if ($res1 && $res2) {
+        if ($stmt->execute()) {
             header("Location: perfil.php?section=configuracion&status=ok");
             exit;
         } else {
             $error = 'Error al actualizar la configuración';
         }
+        $stmt->close();
     }
 
     /* ===== SEGURIDAD ===== */
@@ -399,18 +389,7 @@ $conn->close();
             <small>Personaliza la apariencia de tu interfaz</small>
         </div>
 
-        <div class="settings-group">
-            <h3>Privacidad y Visibilidad</h3>
-            <div class="toggle-switch">
-                <label for="perfil_visible">Mi perfil es visible</label>
-                <label class="switch">
-                    <input type="checkbox" id="perfil_visible" name="perfil_visible" 
-                           <?php echo ($user['visible'] ?? 1) == 1 ? 'checked' : ''; ?>>
-                    <span class="slider"></span>
-                </label>
-            </div>
-            <small>Si desactivas esta opción, otros usuarios no podrán ver tu perfil ni tus productos.</small>
-        </div>
+
 
         <div class="settings-group">
             <h3>Notificaciones</h3>
@@ -502,6 +481,27 @@ $conn->close();
             <p>&copy; 2025 Tu Mercado SENA. Todos los derechos reservados.</p>
         </div>
     </footer>
+    <script src="js/notifications.js"></script>
     <script src="script.js"></script>
+    <script>
+    // Manejar toggle de notificaciones push
+    document.addEventListener('DOMContentLoaded', function() {
+        const pushToggle = document.getElementById('notifica_push');
+        if (pushToggle) {
+            pushToggle.addEventListener('change', async function() {
+                if (this.checked) {
+                    // Solicitar permiso al activar
+                    const result = await NotificationManager.requestPermission();
+                    if (!result.success) {
+                        this.checked = false;
+                        ToastManager.warning(result.message);
+                    } else {
+                        ToastManager.success('Notificaciones push activadas');
+                    }
+                }
+            });
+        }
+    });
+    </script>
 </body>
 </html>

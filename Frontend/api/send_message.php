@@ -1,6 +1,10 @@
 
 <?php
 require_once '../config.php';
+// Cargar sistema de notificaciones solo si existe (no crítico para el envío)
+if (file_exists('../includes/notification_system.php')) {
+    require_once '../includes/notification_system.php';
+}
 header('Content-Type: application/json');
 
 // Establecer zona horaria colombiana (NECESARIO para la función formato_tiempo_relativo)
@@ -24,7 +28,7 @@ $conn = getDBConnection();
 
 // Verificar que el usuario pertenece al chat
 $stmt = $conn->prepare("
-    SELECT c.comprador_id, p.vendedor_id, c.producto_id 
+    SELECT c.comprador_id, p.vendedor_id, c.producto_id, p.nombre as producto_nombre
     FROM chats c
     INNER JOIN productos p ON c.producto_id = p.id
     WHERE c.id = ?
@@ -88,6 +92,14 @@ if ($stmt->execute()) {
     $message = $result->fetch_assoc();
     $stmt3->close();
 
+    // Validar que el mensaje se recuperó correctamente
+    if (!$message) {
+        $stmt->close();
+        $conn->close();
+        echo json_encode(['success' => false, 'error' => 'Error al recuperar el mensaje guardado']);
+        exit;
+    }
+    
     // ✅ Formatear el mensaje para que JS lo muestre con saltos de línea y sanitizado
     $message['mensaje'] = nl2br(htmlspecialchars($message['mensaje']));
     
@@ -95,16 +107,47 @@ if ($stmt->execute()) {
     $message['tiempo_relativo'] = formato_tiempo_relativo($message['fecha_registro']);
     $message['es_mio'] = 1;
 
-    
     // ✅ CLAVE: Devolver el objeto $message completo bajo la clave 'message'
-    echo json_encode([
+    // Preparar respuesta ANTES de intentar notificaciones para asegurar que siempre se devuelva
+    $response = [
         'success' => true,
-        'message' => $message 
-    ]);
+        'message' => $message
+    ];
+    
+    // Cerrar conexión ANTES de intentar notificaciones para evitar conflictos
+    $stmt->close();
+    $conn->close();
+    
+    // RF05-003, RF05-005, RF05-006: Enviar notificación automática al destinatario
+    // IMPORTANTE: Esto NO debe afectar el envío del mensaje si falla
+    // Ejecutar en un bloque separado para que cualquier error no afecte la respuesta
+    $notificacion_result = null;
+    if (function_exists('notificarNuevoMensaje')) {
+        // Usar output buffering para capturar cualquier salida no deseada
+        ob_start();
+        try {
+            $destinatario_id = $es_comprador ? $chat['vendedor_id'] : $chat['comprador_id'];
+            $notificacion_result = @notificarNuevoMensaje($chat_id, $user['id'], $destinatario_id, $chat['producto_nombre'] ?? 'un producto');
+            // Solo agregar notificación si existe y no hay errores
+            if ($notificacion_result && isset($notificacion_result['resultado'])) {
+                $response['notificacion'] = $notificacion_result['resultado'];
+            }
+        } catch (Throwable $e) {
+            // Capturar cualquier tipo de error (Exception o Error)
+            error_log("Error al enviar notificación: " . $e->getMessage());
+        }
+        // Descartar cualquier salida capturada de las notificaciones
+        ob_end_clean();
+    }
+    
+    // SIEMPRE devolver la respuesta, incluso si las notificaciones fallaron
+    echo json_encode($response);
+    exit; // Asegurar que no se ejecute código adicional
 } else {
-    echo json_encode(['success' => false, 'error' => 'Error al guardar mensaje']);
+    $error_msg = $stmt->error ?? 'Error desconocido al guardar mensaje';
+    $stmt->close();
+    $conn->close();
+    echo json_encode(['success' => false, 'error' => $error_msg]);
+    exit;
 }
-
-$stmt->close();
-$conn->close();
 ?>

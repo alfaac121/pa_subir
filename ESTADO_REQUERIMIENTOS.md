@@ -9,9 +9,9 @@
 
 | Estado | Cantidad | Porcentaje |
 |--------|----------|------------|
-| ✅ **Completos** | 11 | 50% |
+| ✅ **Completos** | 17 | 77% |
 | ⚠️ **Parciales** | 6 | 27% |
-| ❌ **Pendientes** | 5 | 23% |
+| ❌ **Pendientes** | 4 | 18% |
 
 ---
 
@@ -30,6 +30,12 @@
 | RF08-010 | Políticas de comportamiento y privacidad | `politicas.php` | Existente |
 | RF09-001 | Bloquear usuarios | `api/toggle_bloqueo.php`, `producto.php`, `script.js` | 2026-02-05 |
 | RF09-002 | Lista de usuarios bloqueados | `bloqueados.php` | 2026-02-05 |
+| RF01-003 | Recuperar contraseña con código | `forgot_password.php`, `email_functions.php` | 2026-02-09 |
+| RF03-017 | Gestionar devoluciones | `historial.php`, `api/solicitar_devolucion.php`, `api/responder_devolucion.php` | 2026-02-09 |
+| RF05-003 | Notificaciones por correo (lógica) | `includes/notification_system.php` | 2026-02-09 |
+| RF05-004 | Notificaciones push PWA | `js/push_notifications.js`, `sw.js`, `api/save_push_subscription.php` | 2026-02-09 |
+| RF05-005 | Mensajes emergentes ante eventos | `includes/notification_system.php`, `script.js` | 2026-02-09 |
+| RF05-006 | Correos automáticos ante eventos | `includes/notification_system.php` | 2026-02-09 |
 
 ---
 
@@ -50,13 +56,27 @@
 
 | ID | Descripción | Prioridad | Notas |
 |----|-------------|-----------|-------|
-| RF03-017 | Gestionar devoluciones | Media | Sistema complejo, requiere diseño |
 | RNF04-004 | Cambios de perfil cada 24h | Baja | Restricción temporal en edición |
 | RNF05-004 | Validar links de redes sociales | Baja | Regex para URLs válidas |
 | RNF06-001 | Imágenes convertidas a JPG con límites | Media | Procesamiento de imágenes en PHP |
 | RNF07-001 | Chats cargan 16 mensajes por vez | Baja | Paginación en chat |
 
 ---
+
+## 📁 ARCHIVOS CREADOS EN SESIÓN 2026-02-09
+
+### Sistema de Notificaciones:
+- `Frontend/includes/notification_system.php` - Sistema centralizado de notificaciones automáticas
+- `Frontend/js/push_notifications.js` - Manejo de notificaciones push PWA
+- `Frontend/api/save_push_subscription.php` - API para guardar suscripciones push
+
+### Archivos Modificados:
+- `Frontend/api/send_message.php` - Integrado sistema de notificaciones
+- `Frontend/api/finalizar_venta.php` - Integrado sistema de notificaciones
+- `Frontend/api/solicitar_devolucion.php` - Integrado sistema de notificaciones
+- `Frontend/api/responder_devolucion.php` - Integrado sistema de notificaciones
+- `Frontend/script.js` - Integrado notificaciones push
+- `Frontend/index.php` - Agregado script de push notifications
 
 ## 📁 ARCHIVOS CREADOS EN SESIÓN 2026-02-05
 

@@ -98,7 +98,7 @@ if (isset($_FILES['imagenes']) && !empty($_FILES['imagenes']['name'][0])) {
 }
             
             $success = 'Producto publicado exitosamente';
-            header('Location: producto.php?id=' . $producto_id);
+            header('Location: mis_productos.php?mensaje=producto_publicado&t=' . time());
             exit;
         } else {
             $error = 'Error al publicar producto: ' . $conn->error;

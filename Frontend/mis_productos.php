@@ -1,4 +1,9 @@
 ﻿<?php
+// FORZAR NO CACHÉ
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+
 require_once 'config.php';
 
 if (!isLoggedIn()) {
@@ -43,8 +48,11 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Mis Productos - Tu Mercado SENA</title>
-    <link rel="stylesheet" href="styles.css?v=<?= time(); ?>">
+    <link rel="stylesheet" href="styles.css?v=<?= time() . rand(1000, 9999); ?>">
 
     <style>
         .btn-delete {
@@ -80,16 +88,25 @@ $conn->close();
     <main class="main">
         <div class="container">
 
+            <!-- MENSAJE CUANDO SE PUBLICA UN PRODUCTO -->
+            <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] === 'producto_publicado'): ?>
+                <div class="alert-success" style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    ✅ Producto publicado exitosamente
+                </div>
+            <?php endif; ?>
+
             <!-- MENSAJE CUANDO SE ELIMINA UN PRODUCTO -->
             <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] === 'producto_eliminado'): ?>
-                <div class="alert-success">
+                <div class="alert-success" style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
                     ✅ Producto eliminado correctamente.
                 </div>
             <?php endif; ?>
 
             <div class="page-header">
                 <h1>Mis Productos</h1>
-                <a href="publicar.php" class="btn-primary">Publicar Nuevo Producto</a>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <a href="publicar.php" class="btn-primary">Publicar Nuevo Producto</a>
+                </div>
             </div>
             
             <div class="products-grid">
@@ -134,7 +151,7 @@ $conn->close();
 
                                 <a href="eliminar_producto.php?id=<?php echo $producto['id']; ?>"
                                    class="btn-delete"
-                                   onclick="return confirm('¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.');">
+                                   onclick="return confirm('¿Estás seguro de que deseas eliminar este producto?\n\nSe eliminará:\n- El producto\n- Todos los chats\n- Todas las fotos\n- Todos los mensajes\n\nEsta acción NO se puede deshacer.');">
                                    Eliminar
                                 </a>
                             </div>

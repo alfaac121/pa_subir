@@ -1,6 +1,8 @@
-﻿
-
-<?php 
+﻿<?php 
+// FORZAR NO CACHÉ
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
 
 require_once 'config.php';
 
@@ -9,10 +11,8 @@ if(!isLoggedIn()) {
     exit;
 }
 
-// Usuario autenticado
-
 if(!isset($_GET['id']) || !is_numeric($_GET['id'])){
-    header('Location:index.php');
+    header('Location:mis_productos.php?error=id_invalido');
     exit;
 }
 
@@ -21,8 +21,10 @@ $user = getCurrentUser();
 $conn = getDBConnection();
 
 // 1. Verificar que el producto existe y pertenece al usuario
-$stmt = $conn->prepare("SELECT vendedor_id FROM productos WHERE id = ?");
-if (!$stmt) die("âŒ Error en prepare: " . $conn->error);
+$stmt = $conn->prepare("SELECT id, vendedor_id, nombre FROM productos WHERE id = ?");
+if (!$stmt) {
+    die("Error en prepare: " . $conn->error);
+}
 
 $stmt->bind_param("i", $producto_id);
 $stmt->execute();
@@ -31,12 +33,14 @@ $producto = $result->fetch_assoc();
 $stmt->close();
 
 if(!$producto){
-    header('Location:index.php?error=producto_no_encontrado');
+    $conn->close();
+    header('Location:mis_productos.php?error=producto_no_encontrado');
     exit;
 }
 
 if($producto['vendedor_id'] != $user['id']){
-    header('Location:index.php?error=sin_permiso');
+    $conn->close();
+    header('Location:mis_productos.php?error=sin_permiso');
     exit;
 }
 
@@ -52,18 +56,31 @@ while($f = $resFotos->fetch_assoc()){
 }
 $stmt->close();
 
-// 3. Iniciar la transacciÃ³n
+// 3. Obtener IDs de chats para eliminar mensajes
+$stmt = $conn->prepare("SELECT id FROM chats WHERE producto_id = ?");
+$stmt->bind_param("i", $producto_id);
+$stmt->execute();
+$resChats = $stmt->get_result();
+
+$chat_ids = [];
+while($c = $resChats->fetch_assoc()){
+    $chat_ids[] = $c['id'];
+}
+$stmt->close();
+
+// 4. Iniciar la transacción
 $conn->begin_transaction();
 
 try {
-    // A. Eliminar mensajes
-    $stmt = $conn->prepare("
-        DELETE FROM mensajes 
-        WHERE chat_id IN (SELECT id FROM chats WHERE producto_id = ?)
-    ");
-    $stmt->bind_param("i", $producto_id);
-    $stmt->execute();
-    $stmt->close();
+    // A. Eliminar mensajes (uno por uno si hay chats)
+    if (!empty($chat_ids)) {
+        foreach ($chat_ids as $chat_id) {
+            $stmt = $conn->prepare("DELETE FROM mensajes WHERE chat_id = ?");
+            $stmt->bind_param("i", $chat_id);
+            $stmt->execute();
+            $stmt->close();
+        }
+    }
 
     // B. Eliminar chats
     $stmt = $conn->prepare("DELETE FROM chats WHERE producto_id = ?");
@@ -87,30 +104,33 @@ try {
     $stmt = $conn->prepare("DELETE FROM productos WHERE id = ?");
     $stmt->bind_param("i", $producto_id);
     $stmt->execute();
+    $affected = $stmt->affected_rows;
     $stmt->close();
 
     $conn->commit();
-    $success = true;
+    $success = ($affected > 0);
 
 } catch(Exception $e){
     $conn->rollback();
     $success = false;
+    error_log("Error eliminando producto: " . $e->getMessage());
 }
 
-// 4. Eliminar archivos fÃ­sicos de las fotos
+$conn->close();
+
+// 5. Eliminar archivos físicos de las fotos
 if ($success) {
     foreach ($fotos as $ruta) {
-        if (file_exists($ruta)) unlink($ruta);
+        if (file_exists($ruta)) {
+            @unlink($ruta);
+        }
     }
-
-    $conn->close();
-    header('Location:mis_productos.php?mensaje=producto_eliminado');
+    
+    // FORZAR LIMPIEZA DE CACHÉ Y REDIRECCIÓN
+    header('Location:mis_productos.php?mensaje=producto_eliminado&t=' . time());
 } else {
-    $conn->close();
-    header('Location:mis_productos.php?error=eliminacion_fallida');
+    header('Location:mis_productos.php?error=eliminacion_fallida&t=' . time());
 }
 
 exit;
 ?>
-
-

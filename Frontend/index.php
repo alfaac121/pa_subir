@@ -130,6 +130,10 @@ $categorias_result = $conn->query($categorias_query);
                     orden: 'newest'
                 };
                 window.currentUsoDatos = <?php echo (int)$user['uso_datos']; ?>;
+                window.currentUserPrefs = {
+                    notifica_correo: <?php echo (int)$user['notifica_correo']; ?>,
+                    notifica_push: <?php echo (int)$user['notifica_push']; ?>
+                };
             </script>
 
         </div>
@@ -141,6 +145,7 @@ $categorias_result = $conn->query($categorias_query);
         </div>
     </footer>
     <script src="script.js?v=<?= time(); ?>"></script>
+    <script src="js/push_notifications.js?v=<?= time(); ?>"></script>
 </body>
 </html>
 <?php

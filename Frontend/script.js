@@ -230,6 +230,11 @@ function loadNewMessages(chatId) {
     fetch(`api/get_messages.php?chat_id=${chatId}&last_id=${lastMessageId}`)
         .then(response => response.json())
         .then(data => {
+            console.log('=== POLLING MENSAJES ===');
+            console.log('Nuevos mensajes:', data.messages?.length || 0);
+            console.log('Estado chat:', data.estado_chat);
+            console.log('=======================');
+            
             if (data.success && data.messages && data.messages.length > 0) {
                 const chatMessages = document.getElementById('chatMessages');
                 if (chatMessages) {
@@ -239,6 +244,62 @@ function loadNewMessages(chatId) {
                     });
                     scrollChatToBottom();
                 }
+            }
+            
+            // VERIFICACIÓN AGRESIVA de devolución
+            if (data.estado_chat === 7) {
+                console.log('🔔 Estado 7 detectado - Verificando si soy vendedor...');
+                console.log('window.esVendedor:', window.esVendedor);
+                console.log('window.esComprador:', window.esComprador);
+                
+                // Si soy vendedor, mostrar notificación
+                if (window.esVendedor === true || window.esVendedor === 'true') {
+                    console.log('✅ SOY VENDEDOR - Mostrando notificación');
+                    
+                    const notification = document.getElementById('devolucionNotification');
+                    if (notification) {
+                        const titulo = document.getElementById('devolucionTitulo');
+                        const motivo = document.getElementById('devolucionMotivo');
+                        const actions = document.getElementById('devolucionActions');
+                        
+                        if (titulo) titulo.textContent = '⚠️ Solicitud de devolución pendiente';
+                        if (motivo) motivo.textContent = `El comprador ha solicitado devolver "${window.productoNombre}". Debes aceptar o rechazar esta solicitud.`;
+                        
+                        if (actions) {
+                            actions.innerHTML = `
+                                <button onclick="responderDevolucion('aceptar')" class="btn-success" style="padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 600;">
+                                    <i class="ri-check-line"></i> Aceptar Devolución
+                                </button>
+                                <button onclick="responderDevolucion('rechazar')" class="btn-danger" style="padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 600;">
+                                    <i class="ri-close-line"></i> Rechazar Devolución
+                                </button>
+                            `;
+                        }
+                        
+                        notification.style.display = 'block';
+                        
+                        // Reproducir sonido
+                        if (typeof playNotificationSound === 'function') {
+                            playNotificationSound();
+                        }
+                        
+                        // Scroll hacia la notificación
+                        setTimeout(() => {
+                            notification.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 100);
+                        
+                        console.log('✅ Notificación mostrada');
+                    } else {
+                        console.error('❌ Elemento devolucionNotification no encontrado');
+                    }
+                } else {
+                    console.log('❌ NO soy vendedor, soy comprador');
+                }
+            }
+            
+            // Actualizar estado global
+            if (data.estado_chat !== undefined) {
+                window.estadoChat = data.estado_chat;
             }
         })
         .catch(error => {
@@ -301,9 +362,19 @@ function sendMessage(chatId, messageText, callback) {
         method: 'POST',
         body: formData
     })
-        .then(response => response.json())
+        .then(response => {
+            // Verificar si la respuesta es JSON válido
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                return response.text().then(text => {
+                    console.error('Respuesta no JSON:', text);
+                    throw new Error('Respuesta del servidor no válida');
+                });
+            }
+            return response.json();
+        })
         .then(data => {
-            if (data.success) {
+            if (data && data.success) {
                 // Si estamos en el modal, agregar el mensaje ahí
                 if (window.currentModalChatId === chatId) {
                     const messagesContainer = document.getElementById('chatModalMessages');
@@ -319,15 +390,30 @@ function sendMessage(chatId, messageText, callback) {
                     const textarea = document.getElementById('messageInput');
                     if (textarea) textarea.value = '';
 
-                    if (data.message) {
-                        const chatMessages = document.getElementById('chatMessages');
-                        if (chatMessages) {
-                            addMessageToChat(data.message, chatMessages);
-                            lastMessageId = Math.max(lastMessageId, data.message.id);
-                            scrollChatToBottom();
-                        }
-                    } else {
-                        loadNewMessages(chatId);
+                    // Agregar el mensaje al chat inmediatamente
+                    const chatMessages = document.getElementById('chatMessages');
+                    if (chatMessages && data.message) {
+                        // Crear el elemento del mensaje
+                        const messageDiv = document.createElement('div');
+                        messageDiv.id = 'message-' + data.message.id;
+                        messageDiv.className = 'message message-sent';
+                        
+                        const messageText = document.createElement('p');
+                        messageText.innerHTML = data.message.mensaje.replace(/\n/g, '<br>');
+                        
+                        const messageTime = document.createElement('span');
+                        messageTime.className = 'message-time';
+                        messageTime.textContent = 'Ahora';
+                        
+                        messageDiv.appendChild(messageText);
+                        messageDiv.appendChild(messageTime);
+                        chatMessages.appendChild(messageDiv);
+                        
+                        // Actualizar último ID
+                        lastMessageId = Math.max(lastMessageId, data.message.id);
+                        
+                        // Scroll al final
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
                     }
                 }
 
@@ -342,7 +428,8 @@ function sendMessage(chatId, messageText, callback) {
         })
         .catch(error => {
             console.error('Error al enviar mensaje:', error);
-            alert('Error al enviar mensaje. Por favor intenta de nuevo.');
+            console.error('Detalles del error:', error.message, error.stack);
+            alert('Error al enviar mensaje: ' + (error.message || 'Error desconocido') + '. Por favor intenta de nuevo.');
         });
 }
 
@@ -494,6 +581,16 @@ function escapeHtml(text) {
 }
 
 function showBrowserNotification(title, message, chatId) {
+    // RF05-005: Mostrar notificación del navegador si está disponible
+    if (typeof window.showBrowserNotification === 'function') {
+        window.showBrowserNotification(title, {
+            body: message,
+            tag: 'chat-' + chatId,
+            data: { url: '/chat.php?id=' + chatId },
+            requireInteraction: false
+        });
+    }
+    
     // Eliminar notificaciones anteriores
     const existing = document.querySelectorAll('.browser-notification');
     existing.forEach(n => n.remove());
@@ -573,10 +670,37 @@ function openChatModal(chatId, productoNombre, otroUsuario) {
     modal.innerHTML = `
         <div class="chat-modal-content">
             <div class="chat-modal-header">
-                <h3>${escapeHtml(productoNombre)}</h3>
-                <button class="chat-modal-close" onclick="closeChatModal()">×</button>
+                <div class="chat-modal-header-left">
+                    <h3>${escapeHtml(productoNombre)}</h3>
+                    <span class="chat-modal-subtitle">${escapeHtml(otroUsuario)}</span>
+                </div>
+                <div class="chat-modal-header-right">
+                    <button class="btn-devolucion-modal" onclick="solicitarDevolucionModal(${chatId}, '${escapeHtml(productoNombre)}')" title="Solicitar devolución">
+                        <i class="ri-arrow-go-back-line"></i>
+                    </button>
+                    <button class="chat-modal-close" onclick="closeChatModal()">×</button>
+                </div>
             </div>
             <div class="chat-modal-body">
+                <!-- Notificación de devolución pendiente (para vendedor) -->
+                <div id="modalDevolucionNotification" class="modal-devolucion-notification" style="display: none;">
+                    <div class="modal-devolucion-content">
+                        <i class="ri-arrow-go-back-line"></i>
+                        <div class="modal-devolucion-info">
+                            <strong>Solicitud de devolución pendiente</strong>
+                            <p>El comprador ha solicitado devolver este producto</p>
+                        </div>
+                        <div class="modal-devolucion-actions">
+                            <button onclick="responderDevolucionModal(${chatId}, 'aceptar')" class="btn-success-small">
+                                <i class="ri-check-line"></i> Aceptar
+                            </button>
+                            <button onclick="responderDevolucionModal(${chatId}, 'rechazar')" class="btn-danger-small">
+                                <i class="ri-close-line"></i> Rechazar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="chat-modal-messages" id="chatModalMessages"></div>
                 <div class="chat-modal-input">
                     <form id="chatModalForm" onsubmit="event.preventDefault(); sendModalMessage(${chatId})">
@@ -597,6 +721,9 @@ function openChatModal(chatId, productoNombre, otroUsuario) {
 
     // Cargar todos los mensajes al abrir el modal
     loadAllModalMessages(chatId);
+    
+    // Verificar si hay devolución pendiente
+    verificarDevolucionModal(chatId);
 
     // Inicializar polling para este chat
     if (chatPollingInterval) {
@@ -672,6 +799,46 @@ function loadModalMessages(chatId, silent = false) {
             } else if (!silent) {
                 // Cargar todos los mensajes la primera vez
                 loadAllModalMessages(chatId);
+            }
+            
+            // FORZAR verificación de devolución en modal
+            if (data.estado_chat === 7) {
+                // Verificar si soy vendedor usando la API
+                fetch(`api/verificar_devolucion.php?chat_id=${chatId}`)
+                    .then(res => res.json())
+                    .then(devData => {
+                        if (devData.success && devData.tiene_solicitud_pendiente && devData.es_vendedor) {
+                            const notification = document.getElementById('modalDevolucionNotification');
+                            if (notification) {
+                                const infoDiv = notification.querySelector('.modal-devolucion-info');
+                                if (infoDiv) {
+                                    infoDiv.innerHTML = `
+                                        <strong>⚠️ Solicitud de devolución pendiente</strong>
+                                        <p>El comprador ha solicitado devolver "${devData.producto_nombre}". Debes aceptar o rechazar esta solicitud.</p>
+                                    `;
+                                }
+                                
+                                const actionsDiv = notification.querySelector('.modal-devolucion-actions');
+                                if (actionsDiv) {
+                                    actionsDiv.innerHTML = `
+                                        <button onclick="responderDevolucionModal(${chatId}, 'aceptar')" class="btn-success-small" style="padding: 0.6rem 1.2rem; font-weight: 600;">
+                                            <i class="ri-check-line"></i> Aceptar
+                                        </button>
+                                        <button onclick="responderDevolucionModal(${chatId}, 'rechazar')" class="btn-danger-small" style="padding: 0.6rem 1.2rem; font-weight: 600;">
+                                            <i class="ri-close-line"></i> Rechazar
+                                        </button>
+                                    `;
+                                }
+                                
+                                notification.style.display = 'block';
+                                
+                                if (typeof playNotificationSound === 'function') {
+                                    playNotificationSound();
+                                }
+                            }
+                        }
+                    })
+                    .catch(err => console.error('Error verificando devolución:', err));
             }
         })
         .catch(error => {
@@ -749,6 +916,200 @@ function scrollModalToBottom() {
     }
 }
 
+// ==================== DEVOLUCIÓN DESDE MODAL ====================
+function verificarDevolucionModal(chatId) {
+    fetch(`api/verificar_devolucion.php?chat_id=${chatId}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.tiene_solicitud_pendiente && !data.es_comprador) {
+                // Soy vendedor y hay solicitud pendiente
+                console.log('✅ Devolución pendiente detectada en modal');
+
+                const notification = document.getElementById('modalDevolucionNotification');
+                if (notification) {
+                    // Actualizar contenido con información más clara
+                    const infoDiv = notification.querySelector('.modal-devolucion-info');
+                    if (infoDiv) {
+                        infoDiv.innerHTML = `
+                            <strong>⚠️ Solicitud de devolución pendiente</strong>
+                            <p>El comprador ha solicitado devolver "${data.producto_nombre}". Debes aceptar o rechazar esta solicitud.</p>
+                        `;
+                    }
+
+                    // Mejorar botones
+                    const actionsDiv = notification.querySelector('.modal-devolucion-actions');
+                    if (actionsDiv) {
+                        actionsDiv.innerHTML = `
+                            <button onclick="responderDevolucionModal(${chatId}, 'aceptar')" class="btn-success-small" style="padding: 0.6rem 1.2rem; font-weight: 600;">
+                                <i class="ri-check-line"></i> Aceptar
+                            </button>
+                            <button onclick="responderDevolucionModal(${chatId}, 'rechazar')" class="btn-danger-small" style="padding: 0.6rem 1.2rem; font-weight: 600;">
+                                <i class="ri-close-line"></i> Rechazar
+                            </button>
+                        `;
+                    }
+
+                    notification.style.display = 'block';
+
+                    // Reproducir sonido
+                    if (typeof playNotificationSound === 'function') {
+                        playNotificationSound();
+                    }
+
+                    // ADEMÁS, mostrar alerta modal grande
+                    setTimeout(() => {
+                        mostrarAlertaDevolucionModal(chatId, data.producto_nombre);
+                    }, 500);
+                }
+            }
+        })
+        .catch(err => console.error('Error al verificar devolución:', err));
+}
+
+
+function responderDevolucionModal(chatId, accion) {
+    const textoAccion = accion === 'aceptar' ? 'aceptar' : 'rechazar';
+    const confirmMsg = accion === 'aceptar' 
+        ? '¿Estás seguro de ACEPTAR esta devolución?\n\nEl producto será devuelto al comprador.'
+        : '¿Estás seguro de RECHAZAR esta devolución?\n\nLa venta permanecerá activa.';
+    
+    if (!confirm(confirmMsg)) {
+        return;
+    }
+    
+    const respuesta = prompt(
+        accion === 'aceptar' 
+            ? '¿Deseas agregar un mensaje al aceptar la devolución? (opcional)' 
+            : '¿Por qué rechazas la devolución? (opcional)'
+    );
+    
+    const formData = new FormData();
+    formData.append('chat_id', chatId);
+    formData.append('accion', accion);
+    if (respuesta) formData.append('respuesta', respuesta.trim());
+    
+    // Deshabilitar botones mientras se procesa
+    const notification = document.getElementById('modalDevolucionNotification');
+    const buttons = notification.querySelectorAll('button');
+    buttons.forEach(btn => {
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+    });
+    
+    fetch('api/responder_devolucion.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            // Ocultar notificación
+            if (notification) {
+                notification.style.display = 'none';
+            }
+            
+            // Agregar mensaje de sistema
+            const messagesContainer = document.getElementById('chatModalMessages');
+            if (messagesContainer) {
+                const mensaje = accion === 'aceptar' 
+                    ? '✅ Devolución aceptada' 
+                    : '❌ Devolución rechazada';
+                const systemMessage = document.createElement('div');
+                systemMessage.className = 'message message-system';
+                systemMessage.innerHTML = `
+                    <div class="system-message-content">
+                        <strong>${mensaje}</strong>
+                        ${respuesta ? `<p>${escapeHtml(respuesta)}</p>` : ''}
+                    </div>
+                    <span class="message-time">Ahora</span>
+                `;
+                messagesContainer.appendChild(systemMessage);
+                scrollModalToBottom();
+            }
+            
+            // Mostrar mensaje de éxito y cerrar modal
+            alert(data.message + '\n\nEl chat se actualizará.');
+            
+            // Cerrar modal y recargar notificaciones
+            setTimeout(() => {
+                closeChatModal();
+                loadNotifications();
+            }, 500);
+        } else {
+            alert('Error: ' + data.message);
+            // Rehabilitar botones
+            buttons.forEach(btn => {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            });
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Error al procesar la respuesta');
+        // Rehabilitar botones
+        buttons.forEach(btn => {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        });
+    });
+}
+
+function solicitarDevolucionModal(chatId, productoNombre) {
+    const motivo = prompt(`¿Por qué deseas devolver "${productoNombre}"?\n\nEscribe el motivo de la devolución:`);
+    
+    if (!motivo || motivo.trim() === '') {
+        return;
+    }
+    
+    if (!confirm('¿Estás seguro de solicitar la devolución de este producto?')) {
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('chat_id', chatId);
+    formData.append('motivo', motivo.trim());
+    
+    fetch('api/solicitar_devolucion.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            
+            // Agregar mensaje de sistema en el modal
+            const messagesContainer = document.getElementById('chatModalMessages');
+            if (messagesContainer) {
+                const systemMessage = document.createElement('div');
+                systemMessage.className = 'message message-system';
+                systemMessage.innerHTML = `
+                    <div class="system-message-content">
+                        <strong>🔄 Solicitud de devolución enviada</strong>
+                        <p>${escapeHtml(motivo)}</p>
+                    </div>
+                    <span class="message-time">Ahora</span>
+                `;
+                messagesContainer.appendChild(systemMessage);
+                scrollModalToBottom();
+            }
+            
+            // Ocultar botón de devolución
+            const btnDevolucion = document.querySelector('.btn-devolucion-modal');
+            if (btnDevolucion) {
+                btnDevolucion.style.display = 'none';
+            }
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Error al enviar la solicitud');
+    });
+}
+
 // ==================== INICIALIZACIÓN ====================
 document.addEventListener('DOMContentLoaded', function () {
     // El tema ya se inicializó arriba
@@ -765,6 +1126,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Sistema de notificaciones
     initNotifications();
+    
+    // RF05-004: Inicializar notificaciones push si están habilitadas
+    if (typeof initPushNotifications === 'function') {
+        const userPrefs = window.currentUserPrefs || {};
+        if (userPrefs.notifica_push === 1) {
+            initPushNotifications();
+        }
+    }
 
     // Galería (si existe)
     initProductGallery();
@@ -2522,3 +2891,207 @@ document.addEventListener('keydown', function (e) {
         cerrarModalReporte();
     }
 });
+
+
+// ==================== ELIMINAR PRODUCTO CON AJAX ====================
+function eliminarProducto(productoId, nombreProducto) {
+    console.log('=== ELIMINAR PRODUCTO ===');
+    console.log('ID:', productoId);
+    console.log('Nombre:', nombreProducto);
+    
+    if (!confirm(`¿Estás seguro de que deseas eliminar "${nombreProducto}"?\n\nEsta acción no se puede deshacer y eliminará:\n- El producto\n- Todos los chats relacionados\n- Todas las fotos\n- Todos los mensajes`)) {
+        return;
+    }
+
+    // Buscar la tarjeta del producto
+    const productCard = document.querySelector(`[data-producto-id="${productoId}"]`);
+    const btnDelete = productCard ? productCard.querySelector('.btn-delete') : null;
+    
+    console.log('Tarjeta encontrada:', productCard);
+    console.log('Botón encontrado:', btnDelete);
+    
+    // Mostrar indicador de carga en el botón
+    if (btnDelete) {
+        btnDelete.disabled = true;
+        btnDelete.style.opacity = '0.5';
+        btnDelete.style.pointerEvents = 'none';
+        btnDelete.innerHTML = '<i class="ri-loader-4-line"></i> Eliminando...';
+    }
+
+    const formData = new FormData();
+    formData.append('id', productoId);
+
+    console.log('Enviando petición a API...');
+
+    fetch('api/eliminar_producto.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        console.log('Respuesta recibida:', response);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Datos JSON:', data);
+        
+        if (data.success) {
+            console.log('✅ Eliminación exitosa');
+            
+            // Eliminar la tarjeta del producto con animación
+            if (productCard) {
+                productCard.style.transition = 'all 0.3s ease';
+                productCard.style.opacity = '0';
+                productCard.style.transform = 'scale(0.8)';
+                
+                setTimeout(() => {
+                    productCard.remove();
+                    
+                    // Verificar si quedan productos
+                    const remainingProducts = document.querySelectorAll('[data-producto-id]');
+                    console.log('Productos restantes:', remainingProducts.length);
+                    
+                    if (remainingProducts.length === 0) {
+                        const container = document.querySelector('.products-grid');
+                        if (container) {
+                            container.innerHTML = '<div class="no-products"><p>No tienes productos publicados</p><a href="publicar.php" class="btn-primary">Publicar tu primer producto</a></div>';
+                        }
+                    }
+                }, 300);
+            }
+            
+            // Mostrar mensaje de éxito
+            alert('✅ ' + data.message);
+        } else {
+            console.error('❌ Error en la eliminación:', data.message);
+            alert('❌ Error: ' + data.message);
+            
+            // Restaurar botón
+            if (btnDelete) {
+                btnDelete.disabled = false;
+                btnDelete.style.opacity = '1';
+                btnDelete.style.pointerEvents = 'auto';
+                btnDelete.innerHTML = 'Eliminar';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('❌ Error en fetch:', error);
+        alert('❌ Error al eliminar el producto. Por favor intenta de nuevo.');
+        
+        // Restaurar botón
+        if (btnDelete) {
+            btnDelete.disabled = false;
+            btnDelete.style.opacity = '1';
+            btnDelete.style.pointerEvents = 'auto';
+            btnDelete.innerHTML = 'Eliminar';
+        }
+    });
+}
+
+
+// ==================== ALERTA MODAL PARA DEVOLUCIÓN ====================
+function mostrarAlertaDevolucionModal(chatId, productoNombre) {
+    // Verificar si ya existe la alerta
+    if (document.getElementById('alertaDevolucionModalFlotante')) {
+        return;
+    }
+    
+    const alertaHTML = `
+        <div id="alertaDevolucionModalFlotante" style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        ">
+            <div style="
+                background: linear-gradient(135deg, #FFF3CD 0%, #FFE69C 100%);
+                border: 4px solid #FFC107;
+                border-radius: 20px;
+                padding: 2.5rem;
+                max-width: 500px;
+                width: 90%;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+                animation: slideIn 0.4s ease;
+                text-align: center;
+            ">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">⚠️</div>
+                <h2 style="color: #856404; margin: 0 0 1rem 0; font-size: 1.8rem;">
+                    ¡Solicitud de Devolución!
+                </h2>
+                <p style="color: #856404; font-size: 1.1rem; margin-bottom: 2rem; line-height: 1.5;">
+                    El comprador ha solicitado devolver<br>
+                    <strong>"${escapeHtml(productoNombre)}"</strong>
+                </p>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                    <button onclick="cerrarAlertaModalYResponder(${chatId}, 'aceptar')" style="
+                        padding: 1rem 2rem;
+                        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+                        color: white;
+                        border: none;
+                        border-radius: 10px;
+                        font-size: 1.1rem;
+                        font-weight: 700;
+                        cursor: pointer;
+                        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+                        transition: all 0.3s ease;
+                        min-width: 150px;
+                    " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        ✅ Aceptar
+                    </button>
+                    <button onclick="cerrarAlertaModalYResponder(${chatId}, 'rechazar')" style="
+                        padding: 1rem 2rem;
+                        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+                        color: white;
+                        border: none;
+                        border-radius: 10px;
+                        font-size: 1.1rem;
+                        font-weight: 700;
+                        cursor: pointer;
+                        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+                        transition: all 0.3s ease;
+                        min-width: 150px;
+                    " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        ❌ Rechazar
+                    </button>
+                </div>
+                <button onclick="cerrarAlertaModal()" style="
+                    margin-top: 1.5rem;
+                    padding: 0.5rem 1rem;
+                    background: transparent;
+                    color: #856404;
+                    border: 2px solid #856404;
+                    border-radius: 8px;
+                    font-size: 0.9rem;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                " onmouseover="this.style.background='#856404'; this.style.color='white'" onmouseout="this.style.background='transparent'; this.style.color='#856404'">
+                    Decidir después
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', alertaHTML);
+}
+
+function cerrarAlertaModal() {
+    const alerta = document.getElementById('alertaDevolucionModalFlotante');
+    if (alerta) {
+        alerta.style.animation = 'fadeOut 0.3s ease';
+        setTimeout(() => alerta.remove(), 300);
+    }
+}
+
+function cerrarAlertaModalYResponder(chatId, accion) {
+    cerrarAlertaModal();
+    setTimeout(() => {
+        responderDevolucionModal(chatId, accion);
+    }, 400);
+}

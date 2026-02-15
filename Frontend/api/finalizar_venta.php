@@ -1,5 +1,6 @@
 <?php
 require_once '../config.php';
+require_once '../includes/notification_system.php';
 
 header('Content-Type: application/json');
 
@@ -22,7 +23,7 @@ if ($chat_id <= 0) {
 
 // Verificar que el usuario es el vendedor de este chat
 $stmt = $conn->prepare("
-    SELECT c.*, p.vendedor_id, p.precio as precio_original
+    SELECT c.*, p.vendedor_id, p.precio as precio_original, p.nombre as producto_nombre, c.comprador_id
     FROM chats c
     INNER JOIN productos p ON c.producto_id = p.id
     WHERE c.id = ?
@@ -58,6 +59,9 @@ $stmt = $conn->prepare("
 $stmt->bind_param("dii", $precio, $cantidad, $chat_id);
 
 if ($stmt->execute()) {
+    // RF05-003, RF05-005, RF05-006: Enviar notificaciones automáticas
+    notificarVentaFinalizada($chat_id, $chat['vendedor_id'], $chat['comprador_id'], $chat['producto_nombre']);
+    
     echo json_encode(['success' => true, 'message' => 'Venta finalizada correctamente']);
 } else {
     echo json_encode(['success' => false, 'error' => 'Error al finalizar']);

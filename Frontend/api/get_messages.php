@@ -94,8 +94,21 @@ $stmt->bind_param("i", $chat_id);
 $stmt->execute();
 $stmt->close();
 
+// Obtener estado del chat para verificar devoluciones
+$stmt = $conn->prepare("SELECT estado_id FROM chats WHERE id = ?");
+$stmt->bind_param("i", $chat_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$chat_estado = $result->fetch_assoc();
+$stmt->close();
+
 $conn->close();
 
-echo json_encode(['success' => true, 'messages' => $messages]);
+echo json_encode([
+    'success' => true, 
+    'messages' => $messages,
+    'estado_chat' => $chat_estado['estado_id'] ?? 0,
+    'tiene_devolucion_pendiente' => ($chat_estado['estado_id'] ?? 0) == 7
+]);
 ?>
 
