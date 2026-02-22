@@ -22,11 +22,10 @@ if (!isset($user)) {
                     <a href="favoritos.php" class="<?= $current_page == 'favoritos.php' ? 'active' : '' ?>">Favoritos</a>
                     <a href="publicar.php" class="<?= $current_page == 'publicar.php' ? 'active' : '' ?>">Publicar</a>
                     
-                    <div class="notification-badge">
-                        <i class="ri-chat-3-line notification-icon" id="notificationIcon" title="Chats y notificaciones"></i>
+                    <a href="mis_chats.php" class="notification-badge <?= $current_page == 'mis_chats.php' ? 'active' : '' ?>" title="Mis conversaciones">
+                        <i class="ri-chat-3-line notification-icon" id="notificationIcon"></i>
                         <span class="notification-count hidden" id="notificationCount">0</span>
-                        <div class="chats-list" id="chatsList"></div>
-                    </div>
+                    </a>
 
                     <a href="perfil.php" class="perfil-link <?= $current_page == 'perfil.php' ? 'active' : '' ?>">
                         <div class="user-avatar-container">

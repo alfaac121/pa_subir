@@ -269,7 +269,11 @@ $conn->close();
                             </div>
                             
                             <?php if (!empty($chat['producto_imagen'])): ?>
-                                <img src="uploads/<?= htmlspecialchars($chat['producto_imagen']) ?>" alt="Producto" class="chat-product-img">
+                                <img src="uploads/productos/<?= htmlspecialchars($chat['producto_imagen']) ?>" alt="Producto" class="chat-product-img" onerror="this.src='https://via.placeholder.com/50?text=Sin+Imagen'">
+                            <?php else: ?>
+                                <div class="chat-product-img" style="background: var(--color-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                                    <i class="ri-image-line" style="font-size: 1.5rem;"></i>
+                                </div>
                             <?php endif; ?>
                         </a>
                     <?php endwhile; ?>

@@ -276,6 +276,7 @@ $conn->close();
                         <li><a href="#" data-section="perfil" class="<?php echo $active_section === 'perfil' ? 'active' : ''; ?>">Información Personal</a></li>
                         <li><a href="#" data-section="configuracion" class="<?php echo $active_section === 'configuracion' ? 'active' : ''; ?>">Configuración</a></li>
                         <li><a href="#" data-section="seguridad" class="<?php echo $active_section === 'seguridad' ? 'active' : ''; ?>">Seguridad</a></li>
+                        <li><a href="mis_chats.php">Mis Conversaciones</a></li>
                         <li><a href="historial.php">Historial de Transacciones</a></li>
                         
                         <li>

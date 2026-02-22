@@ -256,7 +256,6 @@ function addMessageToChat(message, container) {
     messageDiv.id = `message-${message.id}`;
     messageDiv.className = `message ${message.es_mio == 1 ? 'message-sent' : 'message-received'}`;
     const messageText = document.createElement('p');
-    // Convertir saltos de línea a <br>
     messageText.innerHTML = message.mensaje.replace(/\n/g, '<br>');
 
     const messageTime = document.createElement('span');
@@ -265,6 +264,46 @@ function addMessageToChat(message, container) {
 
     messageDiv.appendChild(messageText);
     messageDiv.appendChild(messageTime);
+    
+    // Detectar tipo de mensaje
+    const esSolicitudConfirmacion = message.mensaje.includes('SOLICITUD DE CONFIRMACIÓN');
+    const esSolicitudDevolucion = message.mensaje.includes('SOLICITUD DE DEVOLUCIÓN');
+    const esRespuesta = message.mensaje.includes('✅') || message.mensaje.includes('❌') || 
+                        message.mensaje.includes('CONFIRMADA') || message.mensaje.includes('RECHAZADA') ||
+                        message.mensaje.includes('ACEPTADA');
+    
+    // LÓGICA SIMPLIFICADA: Los botones aparecen cuando NO es mi mensaje (es_mio == 0)
+    // y es una solicitud (confirmación o devolución) que no ha sido respondida
+    const mostrarBotones = (message.es_mio == 0) && (esSolicitudConfirmacion || esSolicitudDevolucion) && !esRespuesta;
+    
+    if (mostrarBotones) {
+        const buttonsDiv = document.createElement('div');
+        buttonsDiv.style.cssText = 'display: flex; gap: 0.5rem; margin-top: 1rem;';
+        buttonsDiv.id = `buttons-${message.id}`;
+        
+        if (esSolicitudConfirmacion) {
+            buttonsDiv.innerHTML = `
+                <button onclick="responderConfirmacion('confirmar', ${message.id})" style="flex: 1; padding: 0.75rem; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                    <i class="ri-check-line"></i> Confirmar
+                </button>
+                <button onclick="responderConfirmacion('rechazar', ${message.id})" style="flex: 1; padding: 0.75rem; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                    <i class="ri-close-line"></i> Rechazar
+                </button>
+            `;
+        } else if (esSolicitudDevolucion) {
+            buttonsDiv.innerHTML = `
+                <button onclick="responderDevolucion('aceptar', ${message.id})" style="flex: 1; padding: 0.75rem; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                    <i class="ri-check-line"></i> Aceptar
+                </button>
+                <button onclick="responderDevolucion('rechazar', ${message.id})" style="flex: 1; padding: 0.75rem; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                    <i class="ri-close-line"></i> Rechazar
+                </button>
+            `;
+        }
+        
+        messageDiv.appendChild(buttonsDiv);
+    }
+    
     container.appendChild(messageDiv);
 }
 

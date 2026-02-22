@@ -147,8 +147,8 @@ $stmt->close();
                         $message_class = ($mensaje['es_comprador'] == 1 && $es_comprador) || 
                                          ($mensaje['es_comprador'] == 0 && $es_vendedor) ? 'message-sent' : 'message-received';
                         // Verificar si es solicitud de devolución o confirmación
-                        $es_solicitud_devolucion = strpos($mensaje['mensaje'], '🔄 SOLICITUD DE DEVOLUCIÓN') !== false;
-                        $es_solicitud_confirmacion = strpos($mensaje['mensaje'], '💰 SOLICITUD DE CONFIRMACIÓN') !== false;
+                        $es_solicitud_devolucion = strpos($mensaje['mensaje'], 'SOLICITUD DE DEVOLUCIÓN') !== false;
+                        $es_solicitud_confirmacion = strpos($mensaje['mensaje'], 'SOLICITUD DE CONFIRMACIÓN') !== false;
                         
                         // Verificar si ya tiene respuesta
                         $tiene_respuesta = false;
@@ -184,19 +184,6 @@ $stmt->close();
                         // Si es solicitud de devolución Y el mensaje lo envió el comprador (es_comprador=1)
                         // Y yo soy el vendedor, entonces veo los botones
                         $mostrar_botones_devolucion = $es_solicitud_devolucion && !$tiene_respuesta && ($mensaje['es_comprador'] == 1) && $es_vendedor;
-                        
-                        // DEBUG
-                        if ($es_solicitud_confirmacion || $es_solicitud_devolucion) {
-                            echo "<!-- DEBUG: ";
-                            echo "tipo=" . ($es_solicitud_confirmacion ? 'CONFIRMACION' : 'DEVOLUCION') . ", ";
-                            echo "tiene_respuesta=" . ($tiene_respuesta ? 'SI' : 'NO') . ", ";
-                            echo "mensaje_es_comprador=" . $mensaje['es_comprador'] . ", ";
-                            echo "yo_soy_comprador=" . ($es_comprador ? 'SI' : 'NO') . ", ";
-                            echo "yo_soy_vendedor=" . ($es_vendedor ? 'SI' : 'NO') . ", ";
-                            echo "mostrar_botones_conf=" . ($mostrar_botones_confirmacion ? 'SI' : 'NO') . ", ";
-                            echo "mostrar_botones_dev=" . ($mostrar_botones_devolucion ? 'SI' : 'NO');
-                            echo " -->";
-                        }
                     ?>
                         <div id="message-<?php echo $mensaje['id']; ?>" class="message <?php echo $message_class; ?>">
                             <p><?php echo nl2br(htmlspecialchars($mensaje['mensaje'])); ?></p>
@@ -206,22 +193,22 @@ $stmt->close();
 <span class="message-time"><?php echo formato_tiempo_relativo($mensaje['fecha_registro']); ?></span>
                             
                             <?php if ($mostrar_botones_devolucion): ?>
-                                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                                    <button onclick="responderDevolucion('aceptar')" style="flex: 1; padding: 0.75rem; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                                <div id="buttons-<?php echo $mensaje['id']; ?>" style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                                    <button onclick="responderDevolucion('aceptar', <?php echo $mensaje['id']; ?>)" style="flex: 1; padding: 0.75rem; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
                                         <i class="ri-check-line"></i> Aceptar
                                     </button>
-                                    <button onclick="responderDevolucion('rechazar')" style="flex: 1; padding: 0.75rem; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                                    <button onclick="responderDevolucion('rechazar', <?php echo $mensaje['id']; ?>)" style="flex: 1; padding: 0.75rem; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
                                         <i class="ri-close-line"></i> Rechazar
                                     </button>
                                 </div>
                             <?php endif; ?>
                             
                             <?php if ($mostrar_botones_confirmacion): ?>
-                                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                                    <button onclick="responderConfirmacion('confirmar')" style="flex: 1; padding: 0.75rem; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                                <div id="buttons-<?php echo $mensaje['id']; ?>" style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                                    <button onclick="responderConfirmacion('confirmar', <?php echo $mensaje['id']; ?>)" style="flex: 1; padding: 0.75rem; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
                                         <i class="ri-check-line"></i> Confirmar
                                     </button>
-                                    <button onclick="responderConfirmacion('rechazar')" style="flex: 1; padding: 0.75rem; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                                    <button onclick="responderConfirmacion('rechazar', <?php echo $mensaje['id']; ?>)" style="flex: 1; padding: 0.75rem; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
                                         <i class="ri-close-line"></i> Rechazar
                                     </button>
                                 </div>
@@ -242,6 +229,15 @@ $stmt->close();
                     // Guardar último ID de mensaje para AJAX
                     window.lastMessageId = <?php echo $last_message_id; ?>;
                     window.chatId = <?php echo $chat_id; ?>;
+                    // Variable global para rastrear confirmaciones procesadas
+                    window.confirmacionesChat = window.confirmacionesChat || {};
+                    
+                    // Verificar rol
+                    <?php if ($es_vendedor): ?>
+                    console.log('✅ Eres VENDEDOR - Deberías ver botones en solicitudes de devolución del comprador');
+                    <?php else: ?>
+                    console.log('✅ Eres COMPRADOR - Deberías ver botones en solicitudes de confirmación del vendedor');
+                    <?php endif; ?>
                 </script>
             </div>
         </div>
@@ -289,6 +285,10 @@ $stmt->close();
         formData.append('chat_id', window.chatId);
         formData.append('detalles', detalles);
         
+        // Deshabilitar botón para evitar doble envío
+        const btn = event.target;
+        if (btn) btn.disabled = true;
+        
         fetch('api/solicitar_confirmacion.php', {
             method: 'POST',
             body: formData
@@ -296,25 +296,38 @@ $stmt->close();
         .then(res => res.json())
         .then(data => {
             if (data.success) {
+                // NO recargar, dejar que el polling cargue el mensaje
                 alert(data.message);
-                window.location.reload();
             } else {
                 alert('Error: ' + data.message);
+                if (btn) btn.disabled = false;
             }
         })
         .catch(err => {
             console.error(err);
             alert('Error al enviar la solicitud');
+            if (btn) btn.disabled = false;
         });
     }
     
-    function responderConfirmacion(accion) {
+    function responderConfirmacion(accion, mensajeId) {
+        // Verificar si ya se procesó esta confirmación
+        const key = `confirmacion_${mensajeId}`;
+        if (window.confirmacionesChat[key]) {
+            console.log('Confirmación ya procesada:', mensajeId);
+            return;
+        }
+        
         const msg = accion === 'confirmar' ? '¿Confirmar esta compra?' : '¿Rechazar esta compra?';
         if (!confirm(msg)) return;
+        
+        // Marcar como procesada
+        window.confirmacionesChat[key] = true;
         
         const formData = new FormData();
         formData.append('chat_id', window.chatId);
         formData.append('accion', accion);
+        formData.append('mensaje_id', mensajeId);
         
         fetch('api/responder_confirmacion.php', {
             method: 'POST',
@@ -324,21 +337,32 @@ $stmt->close();
         .then(data => {
             if (data.success) {
                 alert(data.message);
-                window.location.reload();
+                // Ocultar los botones de este mensaje específico
+                const buttonsDiv = document.getElementById(`buttons-${mensajeId}`);
+                if (buttonsDiv) {
+                    buttonsDiv.style.display = 'none';
+                }
             } else {
                 alert('Error: ' + data.message);
+                // Permitir reintentar si hubo error
+                delete window.confirmacionesChat[key];
             }
         })
         .catch(err => {
             console.error(err);
             alert('Error al procesar la respuesta');
+            // Permitir reintentar si hubo error
+            delete window.confirmacionesChat[key];
         });
     }
     
     // SISTEMA DE DEVOLUCIÓN
     function mostrarFormularioDevolucion() {
         const motivo = prompt('¿Por qué deseas devolver este producto?\n\nEscribe el motivo:');
-        if (!motivo || motivo.trim() === '') return;
+        
+        if (!motivo || motivo.trim() === '') {
+            return;
+        }
         
         if (confirm('¿Solicitar la devolución?')) {
             solicitarDevolucion(motivo.trim());
@@ -358,24 +382,34 @@ $stmt->close();
         .then(data => {
             if (data.success) {
                 alert(data.message);
-                window.location.reload();
             } else {
                 alert('Error: ' + data.message);
             }
         })
         .catch(err => {
-            console.error(err);
+            console.error('Error:', err);
             alert('Error al enviar la solicitud');
         });
     }
     
-    function responderDevolucion(accion) {
+    function responderDevolucion(accion, mensajeId) {
+        // Verificar si ya se procesó esta devolución
+        const key = `devolucion_${mensajeId}`;
+        if (window.confirmacionesChat[key]) {
+            console.log('Devolución ya procesada:', mensajeId);
+            return;
+        }
+        
         const msg = accion === 'aceptar' ? '¿Aceptar la devolución?' : '¿Rechazar la devolución?';
         if (!confirm(msg)) return;
+        
+        // Marcar como procesada
+        window.confirmacionesChat[key] = true;
         
         const formData = new FormData();
         formData.append('chat_id', window.chatId);
         formData.append('accion', accion);
+        formData.append('mensaje_id', mensajeId);
         
         fetch('api/responder_devolucion.php', {
             method: 'POST',
@@ -385,14 +419,22 @@ $stmt->close();
         .then(data => {
             if (data.success) {
                 alert(data.message);
-                window.location.reload();
+                // Ocultar los botones de este mensaje específico
+                const buttonsDiv = document.getElementById(`buttons-${mensajeId}`);
+                if (buttonsDiv) {
+                    buttonsDiv.style.display = 'none';
+                }
             } else {
                 alert('Error: ' + data.message);
+                // Permitir reintentar si hubo error
+                delete window.confirmacionesChat[key];
             }
         })
         .catch(err => {
             console.error(err);
             alert('Error al procesar la respuesta');
+            // Permitir reintentar si hubo error
+            delete window.confirmacionesChat[key];
         });
     }
     </script>

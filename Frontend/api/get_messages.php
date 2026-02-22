@@ -65,17 +65,22 @@ $messages = [];
 
   while ($row = $result->fetch_assoc()) {
 
-    // es_comprador indica quién lo envió
+    // es_comprador indica quién ENVIÓ el mensaje
+    // 1 = comprador envió, 0 = vendedor envió
     $mensajeLoEscribioElComprador = ($row['es_comprador'] == 1);
 
-    // ¿El usuario actual es comprador o vendedor?
+    // Determinar si es MI mensaje
     if ($es_comprador) {
-        // Si soy el comprador → el mensaje es mío si lo escribió el comprador
+        // Yo soy comprador: es mío si lo escribió el comprador
         $row['es_mio'] = $mensajeLoEscribioElComprador ? 1 : 0;
     } else {
-        // Si soy el vendedor → el mensaje es mío si NO lo escribió el comprador
+        // Yo soy vendedor: es mío si lo escribió el vendedor (NO comprador)
         $row['es_mio'] = $mensajeLoEscribioElComprador ? 0 : 1;
     }
+    
+    // Agregar info para botones
+    $row['yo_soy_comprador'] = $es_comprador ? 1 : 0;
+    $row['yo_soy_vendedor'] = $es_vendedor ? 1 : 0;
 
     $messages[] = $row;
 }
