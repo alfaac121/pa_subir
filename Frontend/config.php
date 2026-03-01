@@ -16,6 +16,20 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // =========================================================
+// CONFIGURACIÓN DE RUTAS BASE
+// =========================================================
+
+// Obtener la ruta base del proyecto (hasta /Frontend/)
+$script_name = str_replace('\\', '/', $_SERVER['SCRIPT_NAME']);
+$frontend_pos = strpos($script_name, '/Frontend/');
+$GLOBALS['base_url'] = $frontend_pos !== false ? substr($script_name, 0, $frontend_pos + 10) : '/Frontend/';
+
+// Función helper para obtener la URL base
+function getBaseUrl() {
+    return $GLOBALS['base_url'];
+}
+
+// =========================================================
 // FUNCIONES DE CONEXIÓN Y UTILIDAD
 // =========================================================
 
@@ -43,22 +57,31 @@ function getDBConnection() {
  * Obtiene la ruta completa del avatar o el avatar por defecto
  */
 function getAvatarUrl($imagen) {
+    $baseUrl = getBaseUrl();
+    
     if (empty($imagen)) {
-        return 'assets/images/default-avatar.jpg';
+        return $baseUrl . 'assets/images/default-avatar.jpg';
     }
     
-    // Si ya trae la ruta, no la repetimos
+    // Si ya trae la ruta completa con http/https, devolverla tal cual
+    if (strpos($imagen, 'http') === 0) {
+        return $imagen;
+    }
+    
+    // Si ya trae la ruta uploads/usuarios/, usarla directamente
     if (strpos($imagen, 'uploads/usuarios/') === 0) {
         $fullPath = $imagen;
     } else {
         $fullPath = 'uploads/usuarios/' . $imagen;
     }
 
-    if (file_exists($fullPath)) {
-        return $fullPath;
+    // Verificar si el archivo existe (usando ruta del servidor)
+    $serverPath = $_SERVER['DOCUMENT_ROOT'] . str_replace('//', '/', $baseUrl . $fullPath);
+    if (file_exists($serverPath)) {
+        return $baseUrl . $fullPath;
     }
     
-    return 'assets/images/default-avatar.jpg';
+    return $baseUrl . 'assets/images/default-avatar.jpg';
 }
 /**
  * Verifica si el usuario está logueado

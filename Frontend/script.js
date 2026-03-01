@@ -1,5 +1,12 @@
 // JavaScript para funcionalidades del marketplace
 
+// ==================== HELPER PARA RUTAS ====================
+// Función para obtener la URL base (funciona desde cualquier carpeta)
+function getApiUrl(endpoint) {
+    const baseUrl = window.BASE_URL || '';
+    return baseUrl + endpoint;
+}
+
 // ==================== SISTEMA DE SONIDO DE NOTIFICACIÓN ====================
 const NotificationSound = {
     audioContext: null,
@@ -167,7 +174,7 @@ function toggleFavorito(btn) {
     const formData = new FormData();
     formData.append('vendedor_id', vendedorId);
 
-    fetch('api/toggle_favorito.php', {
+    fetch(getApiUrl('api/toggle_favorito.php'), {
         method: 'POST',
         body: formData
     })
@@ -227,7 +234,7 @@ function initChatRealTime(chatId) {
 function loadNewMessages(chatId) {
     if (!chatId) return;
 
-    fetch(`api/get_messages.php?chat_id=${chatId}&last_id=${lastMessageId}`)
+    fetch(getApiUrl(`api/get_messages.php?chat_id=${chatId}&last_id=${lastMessageId}`))
         .then(response => response.json())
         .then(data => {
             if (data.success && data.messages && data.messages.length > 0) {
@@ -268,13 +275,27 @@ function addMessageToChat(message, container) {
     // Detectar tipo de mensaje
     const esSolicitudConfirmacion = message.mensaje.includes('SOLICITUD DE CONFIRMACIÓN');
     const esSolicitudDevolucion = message.mensaje.includes('SOLICITUD DE DEVOLUCIÓN');
+    const esCompraConfirmada = message.mensaje.includes('✅ COMPRA CONFIRMADA');
     const esRespuesta = message.mensaje.includes('✅') || message.mensaje.includes('❌') || 
                         message.mensaje.includes('CONFIRMADA') || message.mensaje.includes('RECHAZADA') ||
                         message.mensaje.includes('ACEPTADA');
     
-    // LÓGICA SIMPLIFICADA: Los botones aparecen cuando NO es mi mensaje (es_mio == 0)
-    // y es una solicitud (confirmación o devolución) que no ha sido respondida
-    const mostrarBotones = (message.es_mio == 0) && (esSolicitudConfirmacion || esSolicitudDevolucion) && !esRespuesta;
+    // Si es una compra confirmada, ocultar botón Confirmar y mostrar botón Devolver
+    if (esCompraConfirmada) {
+        const btnConfirmarCompra = document.getElementById('btnConfirmarCompra');
+        const btnDevolver = document.getElementById('btnDevolver');
+        
+        if (btnConfirmarCompra) {
+            btnConfirmarCompra.style.display = 'none';
+        }
+        if (btnDevolver) {
+            btnDevolver.style.display = 'flex';
+        }
+    }
+    
+    // Mostrar botones si es una solicitud que no ha sido respondida
+    // Ambas personas pueden hacer clic en los botones
+    const mostrarBotones = (esSolicitudConfirmacion || esSolicitudDevolucion) && !esRespuesta;
     
     if (mostrarBotones) {
         const buttonsDiv = document.createElement('div');
@@ -283,19 +304,23 @@ function addMessageToChat(message, container) {
         
         if (esSolicitudConfirmacion) {
             buttonsDiv.innerHTML = `
-                <button onclick="responderConfirmacion('confirmar', ${message.id})" style="flex: 1; padding: 0.75rem; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                <button onclick="responderConfirmacion('confirmar', ${message.id})" 
+                        style="flex: 1; padding: 0.75rem; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
                     <i class="ri-check-line"></i> Confirmar
                 </button>
-                <button onclick="responderConfirmacion('rechazar', ${message.id})" style="flex: 1; padding: 0.75rem; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                <button onclick="responderConfirmacion('rechazar', ${message.id})" 
+                        style="flex: 1; padding: 0.75rem; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
                     <i class="ri-close-line"></i> Rechazar
                 </button>
             `;
         } else if (esSolicitudDevolucion) {
             buttonsDiv.innerHTML = `
-                <button onclick="responderDevolucion('aceptar', ${message.id})" style="flex: 1; padding: 0.75rem; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                <button onclick="responderDevolucion('aceptar', ${message.id})" 
+                        style="flex: 1; padding: 0.75rem; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
                     <i class="ri-check-line"></i> Aceptar
                 </button>
-                <button onclick="responderDevolucion('rechazar', ${message.id})" style="flex: 1; padding: 0.75rem; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                <button onclick="responderDevolucion('rechazar', ${message.id})" 
+                        style="flex: 1; padding: 0.75rem; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
                     <i class="ri-close-line"></i> Rechazar
                 </button>
             `;
@@ -336,7 +361,7 @@ function sendMessage(chatId, messageText, callback) {
     formData.append('chat_id', chatId);
     formData.append('mensaje', messageText);
 
-    fetch('api/send_message.php', {
+    fetch(getApiUrl('api/send_message.php'), {
         method: 'POST',
         body: formData
     })
@@ -417,7 +442,7 @@ function initNotifications() {
 }
 
 function loadNotifications(silent = false) {
-    fetch('api/get_chats_notificaciones.php')
+    fetch(getApiUrl('api/get_chats_notificaciones.php'))
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -694,7 +719,7 @@ function closeChatModal() {
 function loadModalMessages(chatId, silent = false) {
     const lastId = window.currentModalLastMessageId || 0;
 
-    fetch(`api/get_messages.php?chat_id=${chatId}&last_id=${lastId}`)
+    fetch(getApiUrl(`api/get_messages.php?chat_id=${chatId}&last_id=${lastId}`))
         .then(response => response.json())
         .then(data => {
             if (data.success && data.messages && data.messages.length > 0) {
@@ -719,7 +744,7 @@ function loadModalMessages(chatId, silent = false) {
 }
 
 function loadAllModalMessages(chatId) {
-    fetch(`api/get_messages.php?chat_id=${chatId}&last_id=0`)
+    fetch(getApiUrl(`api/get_messages.php?chat_id=${chatId}&last_id=0`))
         .then(response => response.json())
         .then(data => {
             if (data.success && data.messages) {
@@ -1526,7 +1551,7 @@ function isSameFilters(savedFilters) {
 function setupBeforeUnload() {
     // Guardar al hacer clic en cualquier enlace de producto
     document.addEventListener('click', (e) => {
-        const productLink = e.target.closest('a[href*="producto.php"]');
+        const productLink = e.target.closest('a[href*="productos/producto.php"]');
         if (productLink) {
             saveScrollState();
         }
@@ -1747,7 +1772,7 @@ async function loadProducts(page, isInitial = false) {
             params.append('precio_max', infiniteScrollState.filters.precioMax);
         }
 
-        const response = await fetch(`api/productos.php?${params.toString()}`);
+        const response = await fetch(getApiUrl(`api/productos.php?${params.toString()}`));
         const data = await response.json();
 
         if (data.success) {
@@ -1867,12 +1892,18 @@ function createProductCard(producto) {
     }
 
     card.innerHTML = `
-        <a href="producto.php?id=${producto.id}">
+        <a href="productos/producto.php?id=${producto.id}">
             ${imgHTML}
             <div class="product-info">
                 <h3 class="product-name">${escapeHtml(producto.nombre)}</h3>
                 <p class="product-price">${producto.precio_formateado}</p>
-                <p class="product-seller">Vendedor: ${escapeHtml(producto.vendedor_nombre)}</p>
+                <div class="product-seller-info">
+                    <img src="${escapeHtml(producto.vendedor_avatar)}" 
+                         alt="${escapeHtml(producto.vendedor_nombre)}" 
+                         class="seller-avatar-small"
+                         onerror="this.src='${window.BASE_URL || ''}assets/images/default-avatar.jpg'">
+                    <span>Vendedor: ${escapeHtml(producto.vendedor_nombre)}</span>
+                </div>
                 <p class="product-category">${escapeHtml(producto.categoria_nombre)} - ${escapeHtml(producto.subcategoria_nombre)}</p>
                 <span class="product-condition ${conditionClass}">${escapeHtml(producto.integridad)}</span>
                 <span class="product-stock">Disponibles: ${producto.disponibles}</span>
@@ -2292,7 +2323,7 @@ async function toggleBloqueo(usuarioId) {
         const formData = new FormData();
         formData.append('usuario_id', usuarioId);
 
-        const response = await fetch('api/toggle_bloqueo.php', {
+        const response = await fetch(getApiUrl('api/toggle_bloqueo.php'), {
             method: 'POST',
             body: formData
         });
@@ -2341,7 +2372,7 @@ async function sendChatImage(chatId, file, mensaje = '') {
         formData.append('imagen', file);
         formData.append('mensaje', mensaje);
 
-        const response = await fetch('api/send_chat_image.php', {
+        const response = await fetch(getApiUrl('api/send_chat_image.php'), {
             method: 'POST',
             body: formData
         });
@@ -2380,7 +2411,7 @@ async function finalizarVenta(chatId, precio = 0, cantidad = 1) {
         if (precio > 0) formData.append('precio', precio);
         formData.append('cantidad', cantidad);
 
-        const response = await fetch('api/finalizar_venta.php', {
+        const response = await fetch(getApiUrl('api/finalizar_venta.php'), {
             method: 'POST',
             body: formData
         });
@@ -2412,7 +2443,7 @@ async function eliminarChat(chatId) {
         const formData = new FormData();
         formData.append('chat_id', chatId);
 
-        const response = await fetch('api/eliminar_chat.php', {
+        const response = await fetch(getApiUrl('api/eliminar_chat.php'), {
             method: 'POST',
             body: formData
         });
@@ -2521,7 +2552,7 @@ async function enviarReporte() {
     const motivo = motivoInput.value;
 
     try {
-        const response = await fetch('api/reportar_producto.php', {
+        const response = await fetch(getApiUrl('api/reportar_producto.php'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

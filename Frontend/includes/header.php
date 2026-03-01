@@ -4,30 +4,33 @@ $current_page = basename($_SERVER['PHP_SELF']);
 if (!isset($user)) {
     $user = getCurrentUser();
 }
+
+// Usar la función getBaseUrl() del config.php
+$base_url = getBaseUrl();
 ?>
 <header class="header">
     <div class="container">
         <div class="header-content">
             <h1 class="logo">
-                <a href="index.php">
-                    <img src="logo_new.png" class="logo-img" alt="Logo">
+                <a href="<?= $base_url ?>index.php">
+                    <img src="<?= $base_url ?>logo_new.png" class="logo-img" alt="Logo">
                     <span class="logo-text">Tu Mercado SENA</span>
                 </a>
             </h1>
             
             <div class="header-right">
                 <nav class="nav nav-desktop">
-                    <a href="index.php" class="<?= $current_page == 'index.php' ? 'active' : '' ?>">Inicio</a>
-                    <a href="mis_productos.php" class="<?= $current_page == 'mis_productos.php' ? 'active' : '' ?>">Productos</a>
-                    <a href="favoritos.php" class="<?= $current_page == 'favoritos.php' ? 'active' : '' ?>">Favoritos</a>
-                    <a href="publicar.php" class="<?= $current_page == 'publicar.php' ? 'active' : '' ?>">Publicar</a>
+                    <a href="<?= $base_url ?>index.php" class="<?= $current_page == 'index.php' ? 'active' : '' ?>">Inicio</a>
+                    <a href="<?= $base_url ?>productos/mis_productos.php" class="<?= $current_page == 'mis_productos.php' ? 'active' : '' ?>">Productos</a>
+                    <a href="<?= $base_url ?>perfil/favoritos.php" class="<?= $current_page == 'favoritos.php' ? 'active' : '' ?>">Favoritos</a>
+                    <a href="<?= $base_url ?>productos/publicar.php" class="<?= $current_page == 'publicar.php' ? 'active' : '' ?>">Publicar</a>
                     
-                    <a href="mis_chats.php" class="notification-badge <?= $current_page == 'mis_chats.php' ? 'active' : '' ?>" title="Mis conversaciones">
+                    <a href="<?= $base_url ?>chat/mis_chats.php" class="notification-badge <?= $current_page == 'mis_chats.php' ? 'active' : '' ?>" title="Mis conversaciones">
                         <i class="ri-chat-3-line notification-icon" id="notificationIcon"></i>
                         <span class="notification-count hidden" id="notificationCount">0</span>
                     </a>
 
-                    <a href="perfil.php" class="perfil-link <?= $current_page == 'perfil.php' ? 'active' : '' ?>">
+                    <a href="<?= $base_url ?>perfil/perfil.php" class="perfil-link <?= $current_page == 'perfil.php' ? 'active' : '' ?>">
                         <div class="user-avatar-container">
                             <img src="<?= getAvatarUrl($user['imagen']); ?>" 
                                  class="avatar-header" id="headerAvatar" alt="Mi Avatar">

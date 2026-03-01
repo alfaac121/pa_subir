@@ -4,7 +4,7 @@ require_once 'config.php';
 
 // Redirigir a login si no está autenticado
 if (!isLoggedIn()) {
-    header('Location: welcome.php');
+    header('Location: auth/welcome.php');
     exit;
 }
 
@@ -124,6 +124,9 @@ $categorias_result = $conn->query($categorias_query);
             
             <!-- Pasar filtros actuales a JavaScript -->
             <script>
+                // Variable global para rutas de API
+                window.BASE_URL = '<?= getBaseUrl() ?>';
+                
                 window.productFilters = {
                     categoria: <?php echo json_encode($categoria_id); ?>,
                     busqueda: <?php echo json_encode($busqueda); ?>,

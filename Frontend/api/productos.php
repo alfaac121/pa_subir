@@ -41,7 +41,8 @@ try {
         INNER JOIN subcategorias sc ON p.subcategoria_id = sc.id
         INNER JOIN categorias c ON sc.categoria_id = c.id
         WHERE p.estado_id = 1 AND u.estado_id = 1 AND u.visible = 1 AND p.vendedor_id != ?
-        AND p.vendedor_id NOT IN (SELECT bloqueado_id FROM bloqueados WHERE bloqueador_id = ?)";
+        AND p.vendedor_id NOT IN (SELECT bloqueado_id FROM bloqueados WHERE bloqueador_id = ?)
+        AND p.id NOT IN (SELECT producto_id FROM chats WHERE comprador_id = ? AND estado_id = 8)";
     
     // Query de productos
     $query = "SELECT 
@@ -66,10 +67,11 @@ try {
     INNER JOIN integridad i ON p.integridad_id = i.id
     LEFT JOIN fotos f ON f.producto_id = p.id
     WHERE p.estado_id = 1 AND u.estado_id = 1 AND u.visible = 1 AND p.vendedor_id != ?
-    AND p.vendedor_id NOT IN (SELECT bloqueado_id FROM bloqueados WHERE bloqueador_id = ?)";
+    AND p.vendedor_id NOT IN (SELECT bloqueado_id FROM bloqueados WHERE bloqueador_id = ?)
+    AND p.id NOT IN (SELECT producto_id FROM chats WHERE comprador_id = ? AND estado_id = 8)";
     
-    $params = [$user['id'], $user['id']];
-    $types = 'ii';
+    $params = [$user['id'], $user['id'], $user['id']];
+    $types = 'iii';
 
     
     // Aplicar filtros
