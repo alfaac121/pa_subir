@@ -63,41 +63,22 @@ forceLightTheme();
             letter-spacing: -0.5px;
         }
 
-        /* Carousel Styles */
-        .carousel-container {
+        /* Video Container Styles */
+        .video-container {
             width: 100%;
-            height: 250px; /* Un poco más alto para que el 'cover' no recorte tanto */
+            height: 250px;
             overflow: hidden;
             position: relative;
             margin-top: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            background: #000;
         }
 
-        .carousel-wrapper {
-            display: flex;
-            width: 300%;
+        .video-container video {
+            width: 100%;
             height: 100%;
-            animation: slide 15s infinite ease-in-out;
-        }
-
-        .carousel-slide {
-            flex: 0 0 33.333%; /* Ocupa exactamente un tercio del wrapper (que es el 100% del contenedor) */
-            width: 33.333%;
-            height: 100%;
-            background-size: 100% 100%; /* Forzar a que ocupe todo el recuadro sin huecos */
-            background-position: center;
-            background-repeat: no-repeat;
-        }
-
-        @keyframes slide {
-            0% { transform: translateX(0); }
-            30% { transform: translateX(0); }
-            33% { transform: translateX(-33.33%); }
-            63% { transform: translateX(-33.33%); }
-            66% { transform: translateX(-66.66%); }
-            96% { transform: translateX(-66.66%); }
-            100% { transform: translateX(0); }
+            object-fit: cover;
         }
 
         /* Contenedor Principal */
@@ -281,8 +262,8 @@ forceLightTheme();
         }
 
         .sena-tag {
-            background: var(--color-primary);
-            color: white;
+            background: transparent;
+            color: #333;
             padding: 6px 12px;
             border-radius: 5px;
             font-size: 0.8rem;
@@ -359,13 +340,12 @@ forceLightTheme();
                     </div>
                 </div>
 
-                <!-- Carrusel de imágenes (Movido abajo) -->
-                <div class="carousel-container">
-                    <div class="carousel-wrapper">
-                        <div class="carousel-slide" style="background-image: url('<?= getBaseUrl() ?>assets/carousel/1.png');"></div>
-                        <div class="carousel-slide" style="background-image: url('<?= getBaseUrl() ?>assets/carousel/2.png');"></div>
-                        <div class="carousel-slide" style="background-image: url('<?= getBaseUrl() ?>assets/carousel/3.png');"></div>
-                    </div>
+                <!-- Video SENA -->
+                <div class="video-container">
+                    <video autoplay loop controls playsinline>
+                        <source src="<?= getBaseUrl() ?>assets/videos/sena.mp4" type="video/mp4">
+                        Tu navegador no soporta el elemento de video.
+                    </video>
                 </div>
 
             </div>
@@ -389,7 +369,7 @@ forceLightTheme();
                         💡 <span>Exclusivo para la comunidad SENA</span>
                     </div>
                     <div class="sena-tag">
-                        <i class="ri-mail-line"></i> Requiere correo @sena.edu.co
+                        <i class="ri-mail-line"></i> Requiere correo @soy.sena.edu.co
                     </div>
                 </div>
             </div>
@@ -405,22 +385,6 @@ forceLightTheme();
         // Forzar modo claro
         localStorage.setItem('theme', 'light');
         document.documentElement.setAttribute('data-theme', 'light');
-        
-        // Animación del carrusel
-        let currentSlide = 0;
-        const slides = document.querySelectorAll('.carousel-slide');
-        const totalSlides = slides.length;
-        
-        function nextSlide() {
-            currentSlide = (currentSlide + 1) % totalSlides;
-            const wrapper = document.querySelector('.carousel-wrapper');
-            if (wrapper) {
-                wrapper.style.transform = `translateX(-${currentSlide * (100 / totalSlides)}%)`;
-            }
-        }
-        
-        // Cambiar slide cada 3 segundos
-        setInterval(nextSlide, 3000);
     </script>
 
 
